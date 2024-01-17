@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use libc::STDIN_FILENO;
 use termios::{tcgetattr, tcsetattr, Termios};
 
@@ -34,19 +36,21 @@ fn main() {
     });
     enable_raw_mode(&mut original_termios);
     loop {
+        let stdin = std::io::stdin();
         let mut input = String::new();
-        match std::io::stdin().read_line(&mut input) {
-            Ok(_) => {}
-            Err(e) => {
-                exit_with_error(e);
+        for c in stdin.bytes() {
+            match c {
+                // Using ^F (ACK) to exit as ^Q (DC1) doesn't seem to work.
+                Ok(b'\x06') => {
+                    disable_raw_mode(&mut original_termios);
+                    std::process::exit(0);
+                }
+                Ok(c) => {
+                    input.push(c as char);
+                    print!("{}", c as char);
+                }
+                Err(e) => exit_with_error(e),
             }
-        }
-        match input.trim() {
-            "q" => {
-                disable_raw_mode(&mut original_termios);
-                std::process::exit(0);
-            },
-            _ => println!("{}", input.trim()),
         }
     }
 }
