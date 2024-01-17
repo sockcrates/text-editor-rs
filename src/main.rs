@@ -1,11 +1,12 @@
+use libc::STDIN_FILENO;
 use termios::{tcgetattr, tcsetattr, Termios};
 
 fn enable_raw_mode() {
-    let mut termios = Termios::from_fd(0).unwrap_or_else(|e| {
+    let mut termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
         println!("Error: {}", e);
         std::process::exit(1);
     });
-    match tcgetattr(0, &mut termios) {
+    match tcgetattr(STDIN_FILENO, &mut termios) {
         Ok(_) => {}
         Err(e) => {
             println!("Error: {}", e);
@@ -13,7 +14,7 @@ fn enable_raw_mode() {
         }
     }
     termios.c_lflag &= !(termios::ECHO);
-    match tcsetattr(0, termios::TCSAFLUSH, &termios) {
+    match tcsetattr(STDIN_FILENO, termios::TCSAFLUSH, &termios) {
         Ok(_) => {}
         Err(e) => {
             println!("Error: {}", e);
