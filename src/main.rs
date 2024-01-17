@@ -6,28 +6,26 @@ fn exit_with_error(err: std::io::Error) {
     std::process::exit(1);
 }
 
-fn enable_raw_mode() {
-    let mut termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
-        println!("Error: {}", e);
-        std::process::exit(1);
-    });
-    match tcgetattr(STDIN_FILENO, &mut termios) {
+fn enable_raw_mode(original_termios: &mut Termios) {
+    match tcgetattr(STDIN_FILENO, original_termios) {
         Ok(_) => {}
         Err(e) => {
             exit_with_error(e);
         }
     }
-    termios.c_lflag &= !(termios::ECHO);
-    match tcsetattr(STDIN_FILENO, termios::TCSAFLUSH, &termios) {
+    original_termios.c_lflag &= !(termios::ECHO);
+    match tcsetattr(STDIN_FILENO, termios::TCSAFLUSH, original_termios) {
         Ok(_) => {}
-        Err(e) => {
-            exit_with_error(e)
-        }
+        Err(e) => exit_with_error(e),
     }
 }
 
 fn main() {
-    enable_raw_mode();
+    let mut original_termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
+        println!("Error: {}", e);
+        std::process::exit(1);
+    });
+    enable_raw_mode(&mut original_termios);
     loop {
         let mut input = String::new();
         match std::io::stdin().read_line(&mut input) {
