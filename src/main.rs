@@ -6,6 +6,13 @@ fn exit_with_error(err: std::io::Error) {
     std::process::exit(1);
 }
 
+fn disable_raw_mode(original_termios: &mut Termios) {
+    match tcsetattr(STDIN_FILENO, termios::TCSAFLUSH, original_termios) {
+        Ok(_) => {}
+        Err(e) => exit_with_error(e),
+    }
+}
+
 fn enable_raw_mode(original_termios: &mut Termios) {
     match tcgetattr(STDIN_FILENO, original_termios) {
         Ok(_) => {}
@@ -34,9 +41,11 @@ fn main() {
                 exit_with_error(e);
             }
         }
-
         match input.trim() {
-            "q" => std::process::exit(0),
+            "q" => {
+                disable_raw_mode(&mut original_termios);
+                std::process::exit(0);
+            },
             _ => println!("{}", input.trim()),
         }
     }
