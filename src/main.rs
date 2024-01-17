@@ -2,9 +2,15 @@ use termios::{Termios, tcgetattr, tcsetattr};
 
 fn enable_raw_mode() {
     let mut termios = Termios::from_fd(0).unwrap();
-    tcgetattr(0, &mut termios);
+    match tcgetattr(0, &mut termios) {
+        Ok(_) => {},
+        Err(e) => println!("Error: {}", e),
+    }
     termios.c_lflag &= !(termios::ECHO);
-    tcsetattr(0, termios::TCSAFLUSH, &termios);
+    match tcsetattr(0, termios::TCSAFLUSH, &termios) {
+        Ok(_) => {},
+        Err(e) => println!("Error: {}", e),
+    }
 }
 
 fn main() {
