@@ -1,7 +1,7 @@
 use libc::STDIN_FILENO;
 use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
-use termios::{tcgetattr, tcsetattr, Termios, ECHO, ICANON, ISIG, TCSAFLUSH};
+use termios::{tcgetattr, tcsetattr, Termios, ECHO, ICANON, ISIG, IXON, TCSAFLUSH};
 
 fn exit_with_error(err: Error) {
     println!("Error: {}", err);
@@ -22,6 +22,7 @@ fn enable_raw_mode(original_termios: &mut Termios) {
             exit_with_error(e);
         }
     }
+    original_termios.c_iflag &= !IXON;
     original_termios.c_lflag &= !(ECHO | ICANON | ISIG);
     match tcsetattr(STDIN_FILENO, TCSAFLUSH, original_termios) {
         Ok(_) => {}
