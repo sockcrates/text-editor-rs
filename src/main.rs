@@ -1,5 +1,5 @@
 use libc::STDIN_FILENO;
-use std::io::{stdin, Error, Read};
+use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use termios::{tcgetattr, tcsetattr, Termios, ECHO, ICANON, TCSAFLUSH};
 
@@ -36,21 +36,17 @@ fn main() {
     });
     enable_raw_mode(&mut original_termios);
     loop {
-        let stdin = stdin();
-        let mut input = String::new();
-        for c in stdin.bytes() {
-            match c {
-                // Using ^F (ACK) to exit as ^Q (DC1) doesn't seem to work.
-                Ok(b'\x06') => {
-                    disable_raw_mode(&mut original_termios);
-                    exit(0);
-                }
-                Ok(c) => {
-                    input.push(c as char);
-                    print!("{}", c as char);
-                }
-                Err(e) => exit_with_error(e),
-            }
+        let mut stdin = stdin();
+        let stdout = stdout();
+        let mut input: [u8; 1] = [0; 1];
+        match stdout.lock().flush() {
+            Ok(_) => {}
+            Err(e) => exit_with_error(e),
         }
+        match stdin.read_exact(&mut input) {
+            Ok(_) => {}
+            Err(e) => exit_with_error(e),
+        }
+        print!("{:?}", input);
     }
 }
