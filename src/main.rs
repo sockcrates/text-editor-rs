@@ -47,6 +47,6 @@ fn main() {
             Ok(_) => {}
             Err(e) => exit_with_error(e),
         }
-        print!("{:?}", input);
+        print!("{}", input[0] as char);
     }
 }
