@@ -49,9 +49,7 @@ fn main() {
             Err(e) => exit_with_error(e),
         }
         match input[0] {
-            // Using ^F (ACK) to exit as ^Q (DC1) doesn't seem to work on macos and linux with and
-            // without tmux.
-            b'\x06' => {
+            b'q' => {
                 disable_raw_mode(&mut original_termios);
                 exit(0);
             }
