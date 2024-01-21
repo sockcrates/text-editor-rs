@@ -22,6 +22,17 @@ fn editor_read_key(stdin: &mut Stdin) -> u8 {
     input[0]
 }
 
+fn editor_process_keypress(key: u8, original_termios: &mut Termios) {
+    match key {
+        b'\x11' => {
+            terminal::disable_raw_mode(original_termios);
+            exit(0);
+        }
+        b'\r' => print!("\r\n"),
+        _ => print!("{}", key as char),
+    }
+}
+
 fn main() {
     let mut original_termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
         println!("Error: {}", e);
@@ -36,13 +47,6 @@ fn main() {
             exit_with_error("flushing stdout", &e);
         });
         let key = editor_read_key(&mut stdin);
-        match key {
-            b'\x11' => {
-                terminal::disable_raw_mode(&mut original_termios);
-                exit(0);
-            }
-            b'\r' => print!("\r\n"),
-            _ => print!("{}", key as char),
-        }
+        editor_process_keypress(key, &mut original_termios);
     }
 }
