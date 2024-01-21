@@ -1,5 +1,5 @@
 use libc::STDIN_FILENO;
-use std::io::{self, stdin, stdout, Error, Read, Write};
+use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
