@@ -3,7 +3,7 @@ use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
-    IXON, OPOST, TCSAFLUSH,
+    IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
 };
 
 fn exit_with_error(err: Error) {
@@ -29,6 +29,8 @@ fn enable_raw_mode(raw_mode_termios: &mut Termios) {
     raw_mode_termios.c_iflag &= !(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
     raw_mode_termios.c_lflag &= !(ECHO | ICANON | IEXTEN | ISIG);
     raw_mode_termios.c_oflag &= !(OPOST);
+    raw_mode_termios.c_cc[VMIN] = 0;
+    raw_mode_termios.c_cc[VTIME] = 1;
     match tcsetattr(STDIN_FILENO, TCSAFLUSH, raw_mode_termios) {
         Ok(_) => {}
         Err(e) => exit_with_error(e),
@@ -50,7 +52,7 @@ fn main() {
             Ok(_) => {}
             Err(e) => exit_with_error(e),
         }
-        match stdin.read_exact(&mut input) {
+        match stdin.read(&mut input) {
             Ok(_) => {}
             Err(e) => exit_with_error(e),
         }
