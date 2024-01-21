@@ -18,18 +18,18 @@ fn disable_raw_mode(original_termios: &mut Termios) {
     }
 }
 
-fn enable_raw_mode(original_termios: &mut Termios) {
-    match tcgetattr(STDIN_FILENO, original_termios) {
+fn enable_raw_mode(raw_mode_termios: &mut Termios) {
+    match tcgetattr(STDIN_FILENO, raw_mode_termios) {
         Ok(_) => {}
         Err(e) => {
             exit_with_error(e);
         }
     }
-    original_termios.c_cflag |= CS8;
-    original_termios.c_iflag &= !(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    original_termios.c_lflag &= !(ECHO | ICANON | IEXTEN | ISIG);
-    original_termios.c_oflag &= !(OPOST);
-    match tcsetattr(STDIN_FILENO, TCSAFLUSH, original_termios) {
+    raw_mode_termios.c_cflag |= CS8;
+    raw_mode_termios.c_iflag &= !(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
+    raw_mode_termios.c_lflag &= !(ECHO | ICANON | IEXTEN | ISIG);
+    raw_mode_termios.c_oflag &= !(OPOST);
+    match tcsetattr(STDIN_FILENO, TCSAFLUSH, raw_mode_termios) {
         Ok(_) => {}
         Err(e) => exit_with_error(e),
     }
@@ -40,7 +40,8 @@ fn main() {
         println!("Error: {}", e);
         exit(1);
     });
-    enable_raw_mode(&mut original_termios);
+    let mut clone_termios = original_termios.clone();
+    enable_raw_mode(&mut clone_termios);
     loop {
         let mut stdin = stdin();
         let stdout = stdout();
