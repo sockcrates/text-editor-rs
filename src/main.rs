@@ -30,7 +30,7 @@ fn main() {
             Err(e) => exit_with_error("reading from input", &e),
         };
         match input[0] {
-            b'q' => {
+            b'\x11' => {
                 terminal::disable_raw_mode(&mut original_termios);
                 exit(0);
             }
