@@ -1,20 +1,20 @@
 use libc::STDIN_FILENO;
-use std::io::{stdin, stdout, Error, Read, Write};
+use std::io::{self, stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
 };
 
-fn exit_with_error(err: Error) {
-    println!("Error: {}", err);
+fn exit_with_error(location: &str, err: Error) {
+    println!("Error in {}: {}", location, err);
     exit(1);
 }
 
 fn disable_raw_mode(original_termios: &mut Termios) {
     match tcsetattr(STDIN_FILENO, TCSAFLUSH, original_termios) {
         Ok(_) => {}
-        Err(e) => exit_with_error(e),
+        Err(e) => exit_with_error("disabling raw mode", e),
     }
 }
 
@@ -22,7 +22,7 @@ fn enable_raw_mode(raw_mode_termios: &mut Termios) {
     match tcgetattr(STDIN_FILENO, raw_mode_termios) {
         Ok(_) => {}
         Err(e) => {
-            exit_with_error(e);
+            exit_with_error("acquiring terminal", e);
         }
     }
     raw_mode_termios.c_cflag |= CS8;
@@ -33,7 +33,7 @@ fn enable_raw_mode(raw_mode_termios: &mut Termios) {
     raw_mode_termios.c_cc[VTIME] = 1;
     match tcsetattr(STDIN_FILENO, TCSAFLUSH, raw_mode_termios) {
         Ok(_) => {}
-        Err(e) => exit_with_error(e),
+        Err(e) => exit_with_error("setting terminal attributes", e),
     }
 }
 
@@ -50,11 +50,11 @@ fn main() {
         let mut input: [u8; 1] = [0; 1];
         match stdout.lock().flush() {
             Ok(_) => {}
-            Err(e) => exit_with_error(e),
+            Err(e) => exit_with_error("flushing stdout", e),
         }
         match stdin.read(&mut input) {
             Ok(_) => {}
-            Err(e) => exit_with_error(e),
+            Err(e) => exit_with_error("reading from input", e),
         }
         match input[0] {
             b'q' => {
