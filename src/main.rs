@@ -2,35 +2,13 @@ use libc::STDIN_FILENO;
 use std::error::Error;
 use std::io::{stdin, stdout, Read, Write};
 use std::process::exit;
-use termios::{
-    tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
-    IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
-};
+use termios::Termios;
+
+mod terminal;
 
 fn exit_with_error(location: &str, err: &dyn Error) {
     println!("Error in {}: {}", location, err);
     exit(1);
-}
-
-fn disable_raw_mode(original_termios: &mut Termios) {
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, original_termios).unwrap_or_else(|e| {
-        exit_with_error("disabling raw mode", &e);
-    });
-}
-
-fn enable_raw_mode(raw_mode_termios: &mut Termios) {
-    tcgetattr(STDIN_FILENO, raw_mode_termios).unwrap_or_else(|e| {
-        exit_with_error("acquiring terminal", &e);
-    });
-    raw_mode_termios.c_cflag |= CS8;
-    raw_mode_termios.c_iflag &= !(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    raw_mode_termios.c_lflag &= !(ECHO | ICANON | IEXTEN | ISIG);
-    raw_mode_termios.c_oflag &= !(OPOST);
-    raw_mode_termios.c_cc[VMIN] = 0;
-    raw_mode_termios.c_cc[VTIME] = 1;
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, raw_mode_termios).unwrap_or_else(|e| {
-        exit_with_error("enabling raw mode", &e);
-    });
 }
 
 fn main() {
@@ -39,7 +17,7 @@ fn main() {
         exit(1);
     });
     let mut clone_termios = original_termios.clone();
-    enable_raw_mode(&mut clone_termios);
+    terminal::enable_raw_mode(&mut clone_termios);
     loop {
         let mut stdin = stdin();
         let stdout = stdout();
@@ -53,7 +31,7 @@ fn main() {
         };
         match input[0] {
             b'q' => {
-                disable_raw_mode(&mut original_termios);
+                terminal::disable_raw_mode(&mut original_termios);
                 exit(0);
             }
             b'\r' => print!("\r\n"),
