@@ -1,4 +1,4 @@
-use libc::{STDIN_FILENO, BRKINT};
+use libc::STDIN_FILENO;
 use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use termios::{
