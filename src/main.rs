@@ -15,7 +15,7 @@ fn exit_with_error(location: &str, err: &dyn Error) {
     exit(1);
 }
 
-fn editor_read_key(stdin: &mut Stdin) -> u8 {
+fn read_key(stdin: &mut Stdin) -> u8 {
     let mut input: [u8; 1] = [0; 1];
     match stdin.read(&mut input) {
         Ok(_) => {}
@@ -26,10 +26,10 @@ fn editor_read_key(stdin: &mut Stdin) -> u8 {
     input[0]
 }
 
-fn editor_process_keypress(key: u8, original_termios: &mut Termios) {
+fn process_keypress(key: u8, original_termios: &mut Termios) {
     match key {
         b'\x11' => {
-            editor_refresh_screen();
+            refresh_screen();
             terminal::disable_raw_mode(original_termios);
             exit(0);
         }
@@ -38,16 +38,16 @@ fn editor_process_keypress(key: u8, original_termios: &mut Termios) {
     }
 }
 
-fn editor_draw_rows() {
+fn draw_rows() {
     for _ in 0..24 {
         print!("~\r\n");
     }
 }
 
-fn editor_refresh_screen() {
+fn refresh_screen() {
     print!("\x1b[2J");
     print!("\x1b[H");
-    editor_draw_rows();
+    draw_rows();
     print!("\x1b[H");
 }
 
@@ -60,14 +60,14 @@ fn main() {
         raw_termios: original_termios.clone(),
     };
     terminal::enable_raw_mode(&mut editor.raw_termios);
-    editor_refresh_screen();
+    refresh_screen();
     loop {
         let mut stdin = stdin();
         let stdout = stdout();
         stdout.lock().flush().unwrap_or_else(|e| {
             exit_with_error("flushing stdout", &e);
         });
-        let key = editor_read_key(&mut stdin);
-        editor_process_keypress(key, &mut original_termios);
+        let key = read_key(&mut stdin);
+        process_keypress(key, &mut original_termios);
     }
 }
