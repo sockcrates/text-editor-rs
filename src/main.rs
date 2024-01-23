@@ -34,8 +34,16 @@ fn editor_process_keypress(key: u8, original_termios: &mut Termios) {
     }
 }
 
+fn editor_draw_rows() {
+    for _ in 0..24 {
+        print!("~\r\n");
+    }
+}
+
 fn editor_refresh_screen() {
     print!("\x1b[2J");
+    print!("\x1b[H");
+    editor_draw_rows();
     print!("\x1b[H");
 }
 
