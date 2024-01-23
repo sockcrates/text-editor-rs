@@ -7,6 +7,8 @@ use termios::{
 };
 
 fn exit_with_error(location: &str, err: &dyn Error) {
+    print!("\x1b[2J");
+    print!("\x1b[H");
     println!("Error in {}: {}", location, err);
     exit(1);
 }
