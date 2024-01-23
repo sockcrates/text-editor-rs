@@ -25,12 +25,18 @@ fn editor_read_key(stdin: &mut Stdin) -> u8 {
 fn editor_process_keypress(key: u8, original_termios: &mut Termios) {
     match key {
         b'\x11' => {
+            editor_refresh_screen();
             terminal::disable_raw_mode(original_termios);
             exit(0);
         }
         b'\r' => print!("\r\n"),
         _ => print!("{}", key as char),
     }
+}
+
+fn editor_refresh_screen() {
+    print!("\x1b[2J");
+    print!("\x1b[H");
 }
 
 fn main() {
@@ -40,6 +46,7 @@ fn main() {
     });
     let mut clone_termios = original_termios.clone();
     terminal::enable_raw_mode(&mut clone_termios);
+    editor_refresh_screen();
     loop {
         let mut stdin = stdin();
         let stdout = stdout();
