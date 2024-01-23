@@ -14,9 +14,41 @@ pub struct Editor {
 }
 
 impl Editor {
+    fn draw_rows() {
+        for _ in 0..24 {
+            print!("~\r\n");
+        }
+    }
+
     fn exit_with_error(location: &str, err: &dyn Error) {
         println!("Error in {}: {}", location, err);
         exit(1);
+    }
+
+    fn get_window_size() {
+        let mut ws: winsize = winsize {
+            ws_row: 0,
+            ws_col: 0,
+            ws_xpixel: 0,
+            ws_ypixel: 0,
+        };
+        unsafe {
+            ioctl(STDIN_FILENO, TIOCGWINSZ, &mut ws);
+        }
+    }
+
+    fn graceful_exit(&mut self) {
+        Self::refresh_screen();
+        terminal::disable_raw_mode(&mut self.original_termios);
+        exit(0);
+    }
+
+    fn process_keypress(&mut self, key: u8) {
+        match key {
+            b'\x11' => self.graceful_exit(),
+            b'\r' => print!("\r\n"),
+            _ => print!("{}", key as char),
+        }
     }
 
     fn read_key(stdin: &mut Stdin) -> u8 {
@@ -30,37 +62,11 @@ impl Editor {
         input[0]
     }
 
-    fn process_keypress(&mut self, key: u8) {
-        match key {
-            b'\x11' => { self.graceful_exit() }
-            b'\r' => print!("\r\n"),
-            _ => print!("{}", key as char),
-        }
-    }
-
-    fn draw_rows() {
-        for _ in 0..24 {
-            print!("~\r\n");
-        }
-    }
-
     fn refresh_screen() {
         print!("\x1b[2J");
         print!("\x1b[H");
         Self::draw_rows();
         print!("\x1b[H");
-    }
-
-    fn get_window_size() {
-        let mut ws: winsize = winsize {
-            ws_row: 0,
-            ws_col: 0,
-            ws_xpixel: 0,
-            ws_ypixel: 0,
-        };
-        unsafe {
-            ioctl(STDIN_FILENO, TIOCGWINSZ, &mut ws);
-        }
     }
 
     pub fn new() -> Editor {
@@ -80,12 +86,6 @@ impl Editor {
         editor
     }
 
-    fn graceful_exit(&mut self) {
-        Self::refresh_screen();
-        terminal::disable_raw_mode(&mut self.original_termios);
-        exit(0);
-    }
-
     pub fn run(&mut self) {
         loop {
             let mut stdin = stdin();
@@ -98,4 +98,3 @@ impl Editor {
         }
     }
 }
-
