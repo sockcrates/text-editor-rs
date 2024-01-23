@@ -69,7 +69,7 @@ impl Editor {
         print!("\x1b[H");
     }
 
-    pub fn new() -> Editor {
+    pub fn new() -> Self {
         let original_termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
             println!("Error: {}", e);
             exit(1);
