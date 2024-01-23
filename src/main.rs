@@ -6,6 +6,10 @@ use termios::Termios;
 
 mod terminal;
 
+struct EditorConfig {
+    raw_termios: Termios,
+}
+
 fn exit_with_error(location: &str, err: &dyn Error) {
     println!("Error in {}: {}", location, err);
     exit(1);
@@ -52,8 +56,10 @@ fn main() {
         println!("Error: {}", e);
         exit(1);
     });
-    let mut clone_termios = original_termios.clone();
-    terminal::enable_raw_mode(&mut clone_termios);
+    let mut editor = EditorConfig {
+        raw_termios: original_termios.clone(),
+    };
+    terminal::enable_raw_mode(&mut editor.raw_termios);
     editor_refresh_screen();
     loop {
         let mut stdin = stdin();
