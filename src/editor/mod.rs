@@ -9,8 +9,8 @@ mod terminal;
 pub struct Editor {
     original_termios: Termios,
     raw_termios: Termios,
-    screen_rows: u16,
     screen_cols: u16,
+    screen_rows: u16,
 }
 
 impl Editor {
@@ -35,8 +35,8 @@ impl Editor {
         unsafe {
             ioctl(STDIN_FILENO, TIOCGWINSZ, &mut ws);
         }
-        self.screen_rows = ws.ws_row;
         self.screen_cols = ws.ws_col;
+        self.screen_rows = ws.ws_row;
     }
 
     fn graceful_exit(&mut self) {
@@ -79,8 +79,8 @@ impl Editor {
         let mut editor = Self {
             original_termios,
             raw_termios: original_termios.clone(),
-            screen_rows: 0,
             screen_cols: 0,
+            screen_rows: 0,
         };
         terminal::enable_raw_mode(&mut editor.raw_termios);
         editor.get_window_size();
