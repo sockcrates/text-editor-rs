@@ -9,13 +9,13 @@ mod terminal;
 pub struct Editor {
     original_termios: Termios,
     raw_termios: Termios,
-    screen_rows: u32,
-    screen_cols: u32,
+    screen_rows: u16,
+    screen_cols: u16,
 }
 
 impl Editor {
-    fn draw_rows() {
-        for _ in 0..24 {
+    fn draw_rows(&mut self) {
+        for _ in 0..self.screen_rows {
             print!("~\r\n");
         }
     }
@@ -25,7 +25,7 @@ impl Editor {
         exit(1);
     }
 
-    fn get_window_size() {
+    fn get_window_size(&mut self) {
         let mut ws: winsize = winsize {
             ws_row: 0,
             ws_col: 0,
@@ -35,10 +35,12 @@ impl Editor {
         unsafe {
             ioctl(STDIN_FILENO, TIOCGWINSZ, &mut ws);
         }
+        self.screen_rows = ws.ws_row;
+        self.screen_cols = ws.ws_col;
     }
 
     fn graceful_exit(&mut self) {
-        Self::refresh_screen();
+        self.refresh_screen();
         terminal::disable_raw_mode(&mut self.original_termios);
         exit(0);
     }
@@ -62,10 +64,10 @@ impl Editor {
         input[0]
     }
 
-    fn refresh_screen() {
+    fn refresh_screen(&mut self) {
         print!("\x1b[2J");
         print!("\x1b[H");
-        Self::draw_rows();
+        self.draw_rows();
         print!("\x1b[H");
     }
 
@@ -74,15 +76,15 @@ impl Editor {
             println!("Error: {}", e);
             exit(1);
         });
-        Self::get_window_size();
         let mut editor = Self {
             original_termios,
             raw_termios: original_termios.clone(),
             screen_rows: 0,
             screen_cols: 0,
         };
+        editor.get_window_size();
         terminal::enable_raw_mode(&mut editor.raw_termios);
-        Self::refresh_screen();
+        editor.refresh_screen();
         editor
     }
 
