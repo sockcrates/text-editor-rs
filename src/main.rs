@@ -6,7 +6,7 @@ use termios::Termios;
 
 mod terminal;
 
-struct EditorConfig {
+struct Editor {
     raw_termios: Termios,
 }
 
@@ -56,7 +56,7 @@ fn main() {
         println!("Error: {}", e);
         exit(1);
     });
-    let mut editor = EditorConfig {
+    let mut editor = Editor {
         raw_termios: original_termios.clone(),
     };
     terminal::enable_raw_mode(&mut editor.raw_termios);
