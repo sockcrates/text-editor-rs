@@ -82,8 +82,8 @@ impl Editor {
             screen_rows: 0,
             screen_cols: 0,
         };
-        editor.get_window_size();
         terminal::enable_raw_mode(&mut editor.raw_termios);
+        editor.get_window_size();
         editor.refresh_screen();
         editor
     }
