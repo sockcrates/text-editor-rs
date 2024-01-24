@@ -1,7 +1,8 @@
-use libc::{ioctl, winsize, STDIN_FILENO, TIOCGWINSZ};
+use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
 use std::error::Error;
 use std::io::{stdin, stdout, Read, Stdin, Write};
 use std::process::exit;
+use std::u16;
 use termios::Termios;
 
 mod terminal;
@@ -25,6 +26,26 @@ impl Editor {
         exit(1);
     }
 
+    fn get_cursor_position() {
+        write!(stdout(), "\x1b[6n").unwrap_or_else(|e| {
+            Self::exit_with_error("writing ANSI escape Device Status Report, 6", &e);
+        });
+        stdout().flush().unwrap_or_else(|e| {
+            Self::exit_with_error("flushing stdout", &e);
+        });
+        let mut buf: [u8; 1] = [0; 1];
+        loop {
+            match stdin().read(&mut buf) {
+                Ok(bytes) => {
+                    if bytes != 1 {
+                        break;
+                    }
+                }
+                Err(e) => Self::exit_with_error("reading stdin", &e),
+            }
+        }
+    }
+
     fn get_window_size(&mut self) {
         let mut ws: winsize = winsize {
             ws_row: 0,
@@ -33,10 +54,16 @@ impl Editor {
             ws_ypixel: 0,
         };
         unsafe {
-            ioctl(STDIN_FILENO, TIOCGWINSZ, &mut ws);
+            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
+                write!(stdout(), "\x1b[999C\x1b[999B").unwrap_or_else(|e| {
+                    Self::exit_with_error("writing ANSI escape sequence - place cursor at end", &e);
+                });
+                Self::get_cursor_position();
+            } else {
+                self.screen_cols = ws.ws_col;
+                self.screen_rows = ws.ws_row;
+            }
         }
-        self.screen_cols = ws.ws_col;
-        self.screen_rows = ws.ws_row;
     }
 
     fn graceful_exit(&mut self) {
