@@ -1,6 +1,6 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
 use std::error::Error;
-use std::io::{stdin, stdout, Read, Stdin, Write};
+use std::io::{stdin, stdout, Error as IoError, Read, Stdin, Write};
 use std::process::exit;
 use std::u16;
 use termios::Termios;
@@ -80,15 +80,13 @@ impl Editor {
         }
     }
 
-    fn read_key(stdin: &mut Stdin) -> u8 {
+    fn read_key(stdin: &mut Stdin) -> Result<u8, IoError> {
         let mut input: [u8; 1] = [0; 1];
         match stdin.read(&mut input) {
             Ok(_) => {}
-            Err(e) => {
-                Self::exit_with_error("reading stdin", &e);
-            }
-        };
-        input[0]
+            Err(e) => return Err(e),
+        }
+        Ok(input[0])
     }
 
     fn refresh_screen(&mut self) {
@@ -122,7 +120,10 @@ impl Editor {
             stdout.lock().flush().unwrap_or_else(|e| {
                 Self::exit_with_error("flushing stdout", &e);
             });
-            let key = Self::read_key(&mut stdin);
+            let key = Self::read_key(&mut stdin).unwrap_or_else(|e| {
+                Self::exit_with_error("reading key", &e);
+                0
+            });
             self.process_keypress(key);
         }
     }
