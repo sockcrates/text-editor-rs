@@ -66,15 +66,18 @@ impl Editor {
         }
     }
 
-    fn graceful_exit(&mut self) {
+    fn exit(&mut self) {
         self.refresh_screen();
-        terminal::disable_raw_mode(&mut self.original_termios);
+        terminal::disable_raw_mode(&mut self.original_termios).unwrap_or_else(|e| {
+            println!("Error disabling raw mode: {}", e);
+            exit(1);
+        });
         exit(0);
     }
 
     fn process_keypress(&mut self, key: u8) {
         match key {
-            b'\x11' => self.graceful_exit(),
+            b'\x11' => self.exit(),
             b'\r' => print!("\r\n"),
             _ => print!("{}", key as char),
         }
@@ -82,10 +85,7 @@ impl Editor {
 
     fn read_key(stdin: &mut Stdin) -> Result<u8, IoError> {
         let mut input: [u8; 1] = [0; 1];
-        match stdin.read(&mut input) {
-            Ok(_) => {}
-            Err(e) => return Err(e),
-        }
+        stdin.read(&mut input)?;
         Ok(input[0])
     }
 
@@ -96,7 +96,7 @@ impl Editor {
         print!("\x1b[H");
     }
 
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, IoError> {
         let original_termios = Termios::from_fd(STDIN_FILENO).unwrap_or_else(|e| {
             println!("Error: {}", e);
             exit(1);
@@ -107,10 +107,10 @@ impl Editor {
             screen_cols: 0,
             screen_rows: 0,
         };
-        terminal::enable_raw_mode(&mut editor.raw_termios);
+        terminal::enable_raw_mode(&mut editor.raw_termios)?;
         editor.get_window_size();
         editor.refresh_screen();
-        editor
+        Ok(editor)
     }
 
     pub fn run(&mut self) {
