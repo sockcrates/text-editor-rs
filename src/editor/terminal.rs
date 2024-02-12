@@ -52,7 +52,7 @@ impl Terminal {
             buf[i] = byte[0];
             i += 1;
         }
-        let response = std::str::from_utf8(&buf)
+        let response = std::str::from_utf8(&buf[..i])
             .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
         if !(response.starts_with("\x1b[") || response.ends_with('R')) {
             return Err(Error::new(
@@ -60,20 +60,23 @@ impl Terminal {
                 "Invalid cursor response",
             ));
         }
-        if let Some(semicolon) = response.find(';') {
-            let rows = response[2..semicolon].parse().map_err(|e| {
+        let mut parts_iter = response[2..].trim_end_matches('R').split(';');
+        let row_str = parts_iter.next();
+        let col_str = parts_iter.next();
+        if let (Some(row_str), Some(col_str)) = (row_str, col_str) {
+            let row = row_str.parse::<u16>().map_err(|e| {
                 Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("Invalid cursor response: {}", e),
+                    format!("Invalid row number: {}", e),
                 )
             })?;
-            let cols = response[semicolon + 1..response.len() - 1].parse().map_err(|e| {
+            let col = col_str.parse::<u16>().map_err(|e| {
                 Error::new(
                     std::io::ErrorKind::InvalidData,
-                    format!("Invalid cursor response: {}", e),
+                    format!("Invalid column number: {}", e),
                 )
             })?;
-            return Ok((rows, cols));
+            return Ok((row, col))
         }
         Err(Error::new(
             std::io::ErrorKind::InvalidData,
