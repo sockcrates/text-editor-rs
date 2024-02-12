@@ -15,7 +15,7 @@ pub struct Editor {
 }
 
 impl Editor {
-    fn draw_rows(&mut self) {
+    fn draw_rows(&self) {
         for _ in 0..self.screen_rows {
             print!("~\r\n");
         }
@@ -46,7 +46,7 @@ impl Editor {
         }
     }
 
-    fn get_window_size(&mut self) {
+    fn get_window_size() -> (u16, u16) {
         let mut ws: winsize = winsize {
             ws_row: 0,
             ws_col: 0,
@@ -59,9 +59,9 @@ impl Editor {
                     Self::exit_with_error("writing ANSI escape sequence - place cursor at end", &e);
                 });
                 Self::get_cursor_position();
+                (0, 0)
             } else {
-                self.screen_cols = ws.ws_col;
-                self.screen_rows = ws.ws_row;
+                (ws.ws_col, ws.ws_row)
             }
         }
     }
@@ -101,14 +101,15 @@ impl Editor {
             println!("Error: {}", e);
             exit(1);
         });
+        let mut clone_termios = original_termios.clone();
+        terminal::enable_raw_mode(&mut clone_termios)?;
+        let (cols, rows) = Editor::get_window_size();
         let mut editor = Self {
             original_termios,
-            raw_termios: original_termios.clone(),
-            screen_cols: 0,
-            screen_rows: 0,
+            raw_termios: clone_termios,
+            screen_cols: cols,
+            screen_rows: rows,
         };
-        terminal::enable_raw_mode(&mut editor.raw_termios)?;
-        editor.get_window_size();
         editor.refresh_screen();
         Ok(editor)
     }
