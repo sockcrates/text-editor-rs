@@ -13,8 +13,11 @@ pub struct Editor {
 
 impl Editor {
     fn draw_rows(&self) {
-        for _ in 0..self.screen_rows {
-            print!("~\r\n");
+        for i in 0..self.screen_rows {
+            print!("~");
+            if i < self.screen_rows - 1 {
+                print!("\r\n");
+            }
         }
     }
 
