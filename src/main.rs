@@ -8,5 +8,8 @@ fn main() {
         println!("Error in main: {}", e);
         exit(1);
     });
-    editor.run();
+    editor.run().unwrap_or_else(|e| {
+        println!("Error running terminal {}", e);
+        exit(1);
+    });
 }

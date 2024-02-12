@@ -21,30 +21,7 @@ impl Editor {
         }
     }
 
-    fn exit_with_error(location: &str, err: &dyn Error) {
-        println!("Error in {}: {}", location, err);
-        exit(1);
-    }
-
-    fn get_cursor_position() {
-        write!(stdout(), "\x1b[6n").unwrap_or_else(|e| {
-            Self::exit_with_error("writing ANSI escape Device Status Report, 6", &e);
-        });
-        stdout().flush().unwrap_or_else(|e| {
-            Self::exit_with_error("flushing stdout", &e);
-        });
-        let mut buf: [u8; 1] = [0; 1];
-        loop {
-            match stdin().read(&mut buf) {
-                Ok(bytes) => {
-                    if bytes != 1 {
-                        break;
-                    }
-                }
-                Err(e) => Self::exit_with_error("reading stdin", &e),
-            }
-        }
-    }
+    fn get_cursor_position() {}
 
     fn exit(&mut self) {
         self.refresh_screen();
@@ -94,17 +71,12 @@ impl Editor {
         Ok(editor)
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), IoError> {
         loop {
             let mut stdin = stdin();
             let stdout = stdout();
-            stdout.lock().flush().unwrap_or_else(|e| {
-                Self::exit_with_error("flushing stdout", &e);
-            });
-            let key = Self::read_key(&mut stdin).unwrap_or_else(|e| {
-                Self::exit_with_error("reading key", &e);
-                0
-            });
+            stdout.lock().flush()?;
+            let key = Self::read_key(&mut stdin)?;
             self.process_keypress(key);
         }
     }
