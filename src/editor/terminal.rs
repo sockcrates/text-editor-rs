@@ -40,9 +40,7 @@ impl Terminal {
     pub fn get_cursor_position() -> Result<(u16, u16), Error> {
         let mut buf: [u8; 32] = [0; 32];
         let mut i = 0;
-        let mut stdout = std::io::stdout();
-        stdout.write(b"\x1b[6n")?;
-        stdout.flush()?;
+        print!("\x1b[6n");
         while i < buf.len() - 1 {
             let mut byte: [u8; 1] = [0; 1];
             let nbytes = std::io::stdin().read(&mut byte)?;
@@ -92,8 +90,7 @@ impl Terminal {
             ws_ypixel: 0,
         };
         unsafe {
-            if true || ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
-                let mut stdout = std::io::stdout();
+            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
                 print!("\x1b[999C\x1b[999B");
                 Terminal::get_cursor_position()
             } else {

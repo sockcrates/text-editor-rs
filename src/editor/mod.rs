@@ -49,8 +49,8 @@ impl Editor {
 
     pub fn new() -> Result<Self, Error> {
         let mut terminal = Terminal::new()?;
-        let (rows, cols) = Terminal::get_window_size()?;
         terminal.enable_raw_mode()?;
+        let (rows, cols) = Terminal::get_window_size()?;
         let mut editor = Self {
             screen_cols: cols,
             screen_rows: rows,
