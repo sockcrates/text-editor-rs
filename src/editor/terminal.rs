@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::Error;
+use std::io::{Error, Read, Write};
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
@@ -37,6 +37,50 @@ impl Terminal {
         Ok(())
     }
 
+    pub fn get_cursor_position() -> Result<(u16, u16), Error> {
+        let mut buf: [u8; 32] = [0; 32];
+        let mut i = 0;
+        let mut stdout = std::io::stdout();
+        stdout.write(b"\x1b[6n")?;
+        stdout.flush()?;
+        while i < buf.len() - 1 {
+            let mut byte: [u8; 1] = [0; 1];
+            let nbytes = std::io::stdin().read(&mut byte)?;
+            if nbytes == 0 || byte[0] == b'R' {
+                break;
+            }
+            buf[i] = byte[0];
+            i += 1;
+        }
+        let response = std::str::from_utf8(&buf)
+            .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+        if !(response.starts_with("\x1b[") || response.ends_with('R')) {
+            return Err(Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Invalid cursor response",
+            ));
+        }
+        if let Some(semicolon) = response.find(';') {
+            let rows = response[2..semicolon].parse().map_err(|e| {
+                Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("Invalid cursor response: {}", e),
+                )
+            })?;
+            let cols = response[semicolon + 1..response.len() - 1].parse().map_err(|e| {
+                Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("Invalid cursor response: {}", e),
+                )
+            })?;
+            return Ok((rows, cols));
+        }
+        Err(Error::new(
+            std::io::ErrorKind::InvalidData,
+            "Invalid cursor response",
+        ))
+    }
+
     pub fn get_window_size() -> Result<(u16, u16), Error> {
         let mut ws: winsize = winsize {
             ws_row: 0,
@@ -45,10 +89,12 @@ impl Terminal {
             ws_ypixel: 0,
         };
         unsafe {
-            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
-                Ok((0, 0))
+            if true || ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
+                let mut stdout = std::io::stdout();
+                print!("\x1b[999C\x1b[999B");
+                Terminal::get_cursor_position()
             } else {
-                Ok((ws.ws_col, ws.ws_row))
+                Ok((ws.ws_row, ws.ws_col))
             }
         }
     }
@@ -71,4 +117,3 @@ impl Drop for Terminal {
         });
     }
 }
-
