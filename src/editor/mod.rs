@@ -1,4 +1,4 @@
-use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
+use libc::STDIN_FILENO;
 use std::error::Error;
 use std::io::{stdin, stdout, Error as IoError, Read, Stdin, Write};
 use std::process::exit;
@@ -46,26 +46,6 @@ impl Editor {
         }
     }
 
-    fn get_window_size() -> Result<(u16, u16), IoError> {
-        let mut ws: winsize = winsize {
-            ws_row: 0,
-            ws_col: 0,
-            ws_xpixel: 0,
-            ws_ypixel: 0,
-        };
-        unsafe {
-            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
-                write!(stdout(), "\x1b[999C\x1b[999B").unwrap_or_else(|e| {
-                    Self::exit_with_error("writing ANSI escape sequence - place cursor at end", &e);
-                });
-                Self::get_cursor_position();
-                Ok((0, 0))
-            } else {
-                Ok((ws.ws_col, ws.ws_row))
-            }
-        }
-    }
-
     fn exit(&mut self) {
         self.refresh_screen();
         terminal::disable_raw_mode(&mut self.original_termios).unwrap_or_else(|e| {
@@ -103,7 +83,7 @@ impl Editor {
         });
         let mut clone_termios = original_termios.clone();
         terminal::enable_raw_mode(&mut clone_termios)?;
-        let (cols, rows) = Editor::get_window_size()?;
+        let (cols, rows) = terminal::get_window_size()?;
         let mut editor = Self {
             original_termios,
             raw_termios: clone_termios,

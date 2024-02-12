@@ -1,4 +1,4 @@
-use libc::STDIN_FILENO;
+use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::Error;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
@@ -20,4 +20,20 @@ pub fn enable_raw_mode(raw_mode_termios: &mut Termios) -> Result<(), Error> {
     raw_mode_termios.c_cc[VTIME] = 1;
     tcsetattr(STDIN_FILENO, TCSAFLUSH, raw_mode_termios)?;
     Ok(())
+}
+
+pub fn get_window_size() -> Result<(u16, u16), Error> {
+    let mut ws: winsize = winsize {
+        ws_row: 0,
+        ws_col: 0,
+        ws_xpixel: 0,
+        ws_ypixel: 0,
+    };
+    unsafe {
+        if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
+            Ok((0, 0))
+        } else {
+            Ok((ws.ws_col, ws.ws_row))
+        }
+    }
 }
