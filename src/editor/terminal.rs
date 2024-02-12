@@ -62,3 +62,13 @@ impl Terminal {
         })
     }
 }
+
+impl Drop for Terminal {
+    fn drop(&mut self) {
+        self.disable_raw_mode().unwrap_or_else(|e| {
+            println!("Error disabling raw mode: {}", e);
+            std::process::exit(1);
+        });
+    }
+}
+
