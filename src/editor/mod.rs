@@ -46,7 +46,7 @@ impl Editor {
         }
     }
 
-    fn get_window_size() -> (u16, u16) {
+    fn get_window_size() -> Result<(u16, u16), IoError> {
         let mut ws: winsize = winsize {
             ws_row: 0,
             ws_col: 0,
@@ -59,9 +59,9 @@ impl Editor {
                     Self::exit_with_error("writing ANSI escape sequence - place cursor at end", &e);
                 });
                 Self::get_cursor_position();
-                (0, 0)
+                Ok((0, 0))
             } else {
-                (ws.ws_col, ws.ws_row)
+                Ok((ws.ws_col, ws.ws_row))
             }
         }
     }
@@ -103,7 +103,7 @@ impl Editor {
         });
         let mut clone_termios = original_termios.clone();
         terminal::enable_raw_mode(&mut clone_termios)?;
-        let (cols, rows) = Editor::get_window_size();
+        let (cols, rows) = Editor::get_window_size()?;
         let mut editor = Self {
             original_termios,
             raw_termios: clone_termios,
