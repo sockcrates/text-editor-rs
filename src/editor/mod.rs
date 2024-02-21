@@ -54,10 +54,14 @@ impl Editor {
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
         let mut append_buffer = AppendBuffer::new(); 
+        // VT100 escape sequence for Set Mode
+        append_buffer.append("\x1b{?25l");
         append_buffer.append("\x1b[2J");
         append_buffer.append("\x1b[H");
         self.draw_rows(&mut append_buffer)?;
         append_buffer.append("\x1b[H");
+        // VT10X escape sequence for Reset Mode
+        append_buffer.append("\x1b{?25h");
         let mut stdout = stdout();
         stdout.write(&append_buffer.buffer)?;
         append_buffer.free();
