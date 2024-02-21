@@ -33,12 +33,12 @@ impl Editor {
     fn process_keypress(&mut self, key: u8) {
         match key {
             b'\x11' => self.exit(),
-            b'\r' => print!("\r\n"),
-            _ => print!("{}", key as char),
+            _ => (),
         }
     }
 
-    fn read_key(stdin: &mut Stdin) -> Result<u8, Error> {
+    fn read_key() -> Result<u8, Error> {
+        let mut stdin = stdin();
         let mut input: [u8; 1] = [0; 1];
         stdin.read(&mut input)?;
         Ok(input[0])
@@ -54,21 +54,20 @@ impl Editor {
         let mut terminal = Terminal::new()?;
         terminal.enable_raw_mode()?;
         let (rows, cols) = Terminal::get_window_size()?;
-        let mut editor = Self {
+        let editor = Self {
             screen_cols: cols,
             screen_rows: rows,
             terminal,
         };
-        editor.refresh_screen();
         Ok(editor)
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
+        self.refresh_screen();
         loop {
-            let mut stdin = stdin();
             let stdout = stdout();
             stdout.lock().flush()?;
-            let key = Self::read_key(&mut stdin)?;
+            let key = Self::read_key()?;
             self.process_keypress(key);
         }
     }
