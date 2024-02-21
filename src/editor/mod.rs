@@ -35,7 +35,8 @@ impl Editor {
         exit(0);
     }
 
-    fn process_keypress(&mut self, key: u8) -> Result<(), Error> {
+    fn process_keypress(&mut self) -> Result<(), Error> {
+        let key: u8 = Self::read_key()?;
         match key {
             b'\x11' => Ok(self.exit()),
             _ => Ok(()),
@@ -71,8 +72,7 @@ impl Editor {
     pub fn run(&mut self) -> Result<(), Error> {
         loop {
             self.refresh_screen()?;
-            let key = Self::read_key()?;
-            self.process_keypress(key)?;
+            self.process_keypress()?;
         }
     }
 }
