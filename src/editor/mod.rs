@@ -51,7 +51,7 @@ impl Editor {
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
         Terminal::clear_screen()?;
-        self.draw_rows();
+        self.draw_rows()?;
         Terminal::cursor_home()?;
         Ok(())
     }
