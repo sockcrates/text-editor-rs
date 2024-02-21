@@ -2,6 +2,9 @@ use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use std::u16;
 
+mod append_buffer;
+use append_buffer::AppendBuffer;
+
 mod terminal;
 use terminal::Terminal;
 
@@ -12,12 +15,11 @@ pub struct Editor {
 }
 
 impl Editor {
-    fn draw_rows(&self) -> Result<(), Error> {
-        let mut stdout = stdout();
+    fn draw_rows(&self, append_buffer: &mut AppendBuffer) -> Result<(), Error> {
         for i in 0..self.screen_rows {
-            stdout.write(b"~")?;
+            append_buffer.append("~");
             if i < self.screen_rows - 1 {
-                stdout.write(b"\r\n")?;
+                append_buffer.append("\r\n");
             }
         }
         Ok(())
@@ -51,9 +53,14 @@ impl Editor {
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
-        Terminal::clear_screen()?;
-        self.draw_rows()?;
-        Terminal::cursor_home()?;
+        let mut append_buffer = AppendBuffer::new(); 
+        append_buffer.append("\x1b[2J");
+        append_buffer.append("\x1b[H");
+        self.draw_rows(&mut append_buffer)?;
+        append_buffer.append("\x1b[H");
+        let mut stdout = stdout();
+        stdout.write(&append_buffer.buffer)?;
+        append_buffer.free();
         Ok(())
     }
 
