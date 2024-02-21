@@ -1,4 +1,4 @@
-use std::io::{stdin, stdout, Error, Read, Stdin, Write};
+use std::io::{stdin, stdout, Error, Read, Write};
 use std::process::exit;
 use std::u16;
 
@@ -35,10 +35,10 @@ impl Editor {
         exit(0);
     }
 
-    fn process_keypress(&mut self, key: u8) {
+    fn process_keypress(&mut self, key: u8) -> Result<(), Error> {
         match key {
-            b'\x11' => self.exit(),
-            _ => (),
+            b'\x11' => Ok(self.exit()),
+            _ => Ok(()),
         }
     }
 
@@ -72,7 +72,7 @@ impl Editor {
         loop {
             self.refresh_screen()?;
             let key = Self::read_key()?;
-            self.process_keypress(key);
+            self.process_keypress(key)?;
         }
     }
 }
