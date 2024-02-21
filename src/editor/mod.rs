@@ -12,17 +12,22 @@ pub struct Editor {
 }
 
 impl Editor {
-    fn draw_rows(&self) {
+    fn draw_rows(&self) -> Result<(), Error> {
+        let mut stdout = stdout();
         for i in 0..self.screen_rows {
-            print!("~");
+            stdout.write(b"~")?;
             if i < self.screen_rows - 1 {
-                print!("\r\n");
+                stdout.write(b"\r\n")?;
             }
         }
+        Ok(())
     }
 
     fn exit(&mut self) {
-        self.refresh_screen();
+        self.refresh_screen().unwrap_or_else(|e| {
+            println!("Error refreshing screen: {}", e);
+            exit(1);
+        });
         self.terminal.disable_raw_mode().unwrap_or_else(|e| {
             println!("Error disabling raw mode: {}", e);
             exit(1);
@@ -44,10 +49,11 @@ impl Editor {
         Ok(input[0])
     }
 
-    fn refresh_screen(&mut self) {
-        Terminal::clear_screen();
+    fn refresh_screen(&mut self) -> Result<(), Error> {
+        Terminal::clear_screen()?;
         self.draw_rows();
-        Terminal::cursor_home();
+        Terminal::cursor_home()?;
+        Ok(())
     }
 
     pub fn new() -> Result<Self, Error> {
@@ -63,10 +69,8 @@ impl Editor {
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
-        self.refresh_screen();
         loop {
-            let stdout = stdout();
-            stdout.lock().flush()?;
+            self.refresh_screen()?;
             let key = Self::read_key()?;
             self.process_keypress(key);
         }

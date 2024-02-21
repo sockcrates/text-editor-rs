@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{Error, Read};
+use std::io::{Error, Read, Write};
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
@@ -11,13 +11,18 @@ pub struct Terminal {
 }
 
 impl Terminal {
-    pub fn clear_screen() {
-        print!("\x1b[2J");
-        print!("\x1b[H");
+    pub fn clear_screen() -> Result<(), Error> {
+        let mut stdout = std::io::stdout();
+        stdout.write(b"\x1b[2J")?;
+        stdout.write(b"\x1b[H")?;
+        stdout.flush()?;
+        Ok(())
     }
 
-    pub fn cursor_home() {
-        print!("\x1b[H");
+    pub fn cursor_home() -> Result<(), Error> {
+        let mut stdout = std::io::stdout();
+        stdout.write(b"\x1b[H")?;
+        Ok(())
     }
 
     pub fn disable_raw_mode(&mut self) -> Result<(), Error> {
