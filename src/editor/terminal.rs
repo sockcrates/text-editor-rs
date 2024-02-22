@@ -11,20 +11,6 @@ pub struct Terminal {
 }
 
 impl Terminal {
-    pub fn clear_screen() -> Result<(), Error> {
-        let mut stdout = std::io::stdout();
-        stdout.write(b"\x1b[2J")?;
-        stdout.write(b"\x1b[H")?;
-        stdout.flush()?;
-        Ok(())
-    }
-
-    pub fn cursor_home() -> Result<(), Error> {
-        let mut stdout = std::io::stdout();
-        stdout.write(b"\x1b[H")?;
-        Ok(())
-    }
-
     pub fn disable_raw_mode(&mut self) -> Result<(), Error> {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &mut self.original_termios)?;
         Ok(())
