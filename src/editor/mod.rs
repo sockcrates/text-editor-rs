@@ -25,7 +25,14 @@ impl Editor {
                 if message_length == self.screen_cols as usize {
                     append_buffer.append(&message[..self.screen_cols as usize]);
                 } else {
-                    append_buffer.append(&message);
+                    let padding = (self.screen_cols as usize - message_length) / 2;
+                    let padded_message = format!(
+                        "{:<padding$}{message:padding$}",
+                        "",
+                        message = message,
+                        padding = padding
+                    );
+                    append_buffer.append(&padded_message);
                 }
             } else {
                 append_buffer.append("~");
