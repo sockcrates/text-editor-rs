@@ -8,6 +8,8 @@ use append_buffer::AppendBuffer;
 mod terminal;
 use terminal::{Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
 
+const KILO_VERSION: &str = "0.0.1";
+
 pub struct Editor {
     screen_cols: u16,
     screen_rows: u16,
@@ -17,7 +19,17 @@ pub struct Editor {
 impl Editor {
     fn draw_rows(&self, append_buffer: &mut AppendBuffer) -> Result<(), Error> {
         for i in 0..self.screen_rows {
-            append_buffer.append("~");
+            if i == self.screen_rows / 3 {
+                let message = format!("Kilo editor -- version {}", KILO_VERSION);
+                let message_length = message.len();
+                if message_length == self.screen_cols as usize {
+                    append_buffer.append(&message[..self.screen_cols as usize]);
+                } else {
+                    append_buffer.append(&message);
+                }
+            } else {
+                append_buffer.append("~");
+            }
             append_buffer.append(ERASE_LINE);
             if i < self.screen_rows - 1 {
                 append_buffer.append("\r\n");
