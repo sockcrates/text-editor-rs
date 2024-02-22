@@ -5,6 +5,17 @@ use termios::{
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
 };
 
+/// VT100 escape sequence command "J" Erase in Display with the argument 2 (
+/// clear whole screen)
+pub const CLEAR_WHOLE_SCREEN: &str = "\x1b[2J";
+/// VT100 escape sequence command "H" Cursor Position with the default argument
+/// (1;1) (move cursor to the upper left corner)
+pub const CURSOR_POSITION_START: &str = "\x1b[H";
+/// VT100 escape sequence command "l" Reset Mode
+pub const HIDE_CURSOR: &str = "\x1b[?25h";
+/// VT100 escape sequence command "h" Set Mode
+pub const SHOW_CURSOR: &str = "\x1b[?25l";
+
 pub struct Terminal {
     original_termios: Termios,
     raw_termios: Termios,

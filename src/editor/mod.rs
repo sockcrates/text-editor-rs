@@ -6,7 +6,7 @@ mod append_buffer;
 use append_buffer::AppendBuffer;
 
 mod terminal;
-use terminal::Terminal;
+use terminal::{Terminal, CLEAR_WHOLE_SCREEN, CURSOR_POSITION_START, HIDE_CURSOR, SHOW_CURSOR};
 
 pub struct Editor {
     screen_cols: u16,
@@ -53,15 +53,15 @@ impl Editor {
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
-        let mut append_buffer = AppendBuffer::new(); 
+        let mut append_buffer = AppendBuffer::new();
         // VT100 escape sequence for Set Mode
-        append_buffer.append("\x1b{?25l");
-        append_buffer.append("\x1b[2J");
-        append_buffer.append("\x1b[H");
+        append_buffer.append(HIDE_CURSOR);
+        append_buffer.append(CLEAR_WHOLE_SCREEN);
+        append_buffer.append(CURSOR_POSITION_START);
         self.draw_rows(&mut append_buffer)?;
-        append_buffer.append("\x1b[H");
+        append_buffer.append(CURSOR_POSITION_START);
         // VT10X escape sequence for Reset Mode
-        append_buffer.append("\x1b{?25h");
+        append_buffer.append(SHOW_CURSOR);
         let mut stdout = stdout();
         stdout.write(&append_buffer.buffer)?;
         append_buffer.free();
