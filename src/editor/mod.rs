@@ -6,7 +6,7 @@ mod append_buffer;
 use append_buffer::AppendBuffer;
 
 mod terminal;
-use terminal::{Terminal, CLEAR_WHOLE_SCREEN, CURSOR_POSITION_START, HIDE_CURSOR, SHOW_CURSOR};
+use terminal::{Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
 
 pub struct Editor {
     screen_cols: u16,
@@ -18,6 +18,7 @@ impl Editor {
     fn draw_rows(&self, append_buffer: &mut AppendBuffer) -> Result<(), Error> {
         for i in 0..self.screen_rows {
             append_buffer.append("~");
+            append_buffer.append(ERASE_LINE);
             if i < self.screen_rows - 1 {
                 append_buffer.append("\r\n");
             }
@@ -56,7 +57,6 @@ impl Editor {
         let mut append_buffer = AppendBuffer::new();
         // VT100 escape sequence for Set Mode
         append_buffer.append(HIDE_CURSOR);
-        append_buffer.append(CLEAR_WHOLE_SCREEN);
         append_buffer.append(CURSOR_POSITION_START);
         self.draw_rows(&mut append_buffer)?;
         append_buffer.append(CURSOR_POSITION_START);

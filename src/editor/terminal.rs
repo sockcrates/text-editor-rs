@@ -11,6 +11,9 @@ pub const CLEAR_WHOLE_SCREEN: &str = "\x1b[2J";
 /// VT100 escape sequence command "H" Cursor Position with the default argument
 /// (1;1) (move cursor to the upper left corner)
 pub const CURSOR_POSITION_START: &str = "\x1b[H";
+/// VT100 escape sequence command "K" Erase in Line with the default argument 0
+/// (clear whole line)
+pub const ERASE_LINE: &str = "\x1b[K";
 /// VT100 escape sequence command "l" Reset Mode
 pub const HIDE_CURSOR: &str = "\x1b[?25h";
 /// VT100 escape sequence command "h" Set Mode
