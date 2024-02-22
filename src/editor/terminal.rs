@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{Error, Read, Write};
+use std::io::{Error, Read};
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
