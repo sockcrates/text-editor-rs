@@ -83,6 +83,7 @@ impl Editor {
         append_buffer.append(SHOW_CURSOR);
         let mut stdout = stdout();
         stdout.write(&append_buffer.buffer)?;
+        stdout.flush()?;
         append_buffer.free();
         Ok(())
     }

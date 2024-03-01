@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{Error, Read};
+use std::io::{Error, Read, Write};
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
@@ -45,7 +45,9 @@ impl Terminal {
     pub fn get_cursor_position() -> Result<(u16, u16), Error> {
         let mut buf: [u8; 32] = [0; 32];
         let mut i = 0;
-        print!("\x1b[6n");
+        let mut stdout = std::io::stdout();
+        stdout.write(b"\x1b[6n")?;
+        stdout.flush()?;
         while i < buf.len() - 1 {
             let mut byte: [u8; 1] = [0; 1];
             let nbytes = std::io::stdin().read(&mut byte)?;
@@ -96,7 +98,9 @@ impl Terminal {
         };
         unsafe {
             if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
-                print!("\x1b[999C\x1b[999B");
+                let mut stdout = std::io::stdout();
+                stdout.write(b"\x1b[999C\x1b[999B")?;
+                stdout.flush()?;
                 Terminal::get_cursor_position()
             } else {
                 Ok((ws.ws_row, ws.ws_col))
