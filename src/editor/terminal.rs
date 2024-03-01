@@ -15,9 +15,9 @@ pub const CURSOR_POSITION_START: &str = "\x1b[H";
 /// (clear whole line)
 pub const ERASE_LINE: &str = "\x1b[K";
 /// VT100 escape sequence command "l" Reset Mode
-pub const HIDE_CURSOR: &str = "\x1b[?25h";
+pub const HIDE_CURSOR: &str = "\x1b[?25l";
 /// VT100 escape sequence command "h" Set Mode
-pub const SHOW_CURSOR: &str = "\x1b[?25l";
+pub const SHOW_CURSOR: &str = "\x1b[?25h";
 
 pub struct Terminal {
     original_termios: Termios,
