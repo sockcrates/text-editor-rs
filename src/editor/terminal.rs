@@ -116,6 +116,15 @@ impl Terminal {
             raw_termios,
         })
     }
+
+    pub fn set_cursor_position_buffer(
+        row: u16,
+        col: u16,
+        buffer: &mut Vec<u8>,
+    ) -> Result<(), Error> {
+        buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
+        Ok(())
+    }
 }
 
 impl Drop for Terminal {

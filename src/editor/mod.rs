@@ -11,6 +11,8 @@ use terminal::{Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CU
 const KILO_VERSION: &str = "0.0.1";
 
 pub struct Editor {
+    cursor_col: u16,
+    cursor_row: u16,
     screen_cols: u16,
     screen_rows: u16,
     terminal: Terminal,
@@ -74,12 +76,13 @@ impl Editor {
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
         let mut append_buffer = AppendBuffer::new();
-        // VT100 escape sequence for Set Mode
         append_buffer.append(HIDE_CURSOR);
-        append_buffer.append(CURSOR_POSITION_START);
         self.draw_rows(&mut append_buffer)?;
-        append_buffer.append(CURSOR_POSITION_START);
-        // VT10X escape sequence for Reset Mode
+        Terminal::set_cursor_position_buffer(
+            self.cursor_row + 1,
+            self.cursor_col + 1,
+            &mut append_buffer.buffer,
+        )?;
         append_buffer.append(SHOW_CURSOR);
         let mut stdout = stdout();
         stdout.write(&append_buffer.buffer)?;
@@ -93,6 +96,8 @@ impl Editor {
         terminal.enable_raw_mode()?;
         let (rows, cols) = Terminal::get_window_size()?;
         let editor = Self {
+            cursor_col: 0,
+            cursor_row: 0,
             screen_cols: cols,
             screen_rows: rows,
             terminal,
