@@ -63,6 +63,7 @@ impl Editor {
         let key: u8 = Self::read_key()?;
         match key {
             b'\x11' => Ok(self.exit()),
+            b'a' | b'd' | b's' | b'w' => self.move_cursor(key),
             _ => Ok(()),
         }
     }
@@ -89,6 +90,16 @@ impl Editor {
         stdout.flush()?;
         append_buffer.free();
         Ok(())
+    }
+
+    fn move_cursor(&mut self, key: u8) -> Result<(), Error> {
+        match key {
+            b'a' => Ok(self.cursor_col = self.cursor_col.saturating_sub(1)),
+            b'd' => Ok(self.cursor_col = self.cursor_col.saturating_add(1)),
+            b's' => Ok(self.cursor_row = self.cursor_row.saturating_add(1)),
+            b'w' => Ok(self.cursor_row = self.cursor_row.saturating_sub(1)),
+            _ => Err(Error::new(std::io::ErrorKind::InvalidInput, "Invalid key")),
+        }
     }
 
     pub fn new() -> Result<Self, Error> {
