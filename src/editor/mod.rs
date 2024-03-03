@@ -6,7 +6,7 @@ mod append_buffer;
 use append_buffer::AppendBuffer;
 
 mod terminal;
-use terminal::{Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
+use terminal::{Terminal, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
 
 const KILO_VERSION: &str = "0.0.1";
 
