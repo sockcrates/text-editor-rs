@@ -1,5 +1,6 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::{stdin, stdout, Error, ErrorKind, Read, Stdin, Stdout, Write};
+use std::process::exit;
 use std::str::from_utf8;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN,
@@ -86,7 +87,7 @@ impl Terminal {
             return Ok((row, col));
         }
         Err(Error::new(
-            std::io::ErrorKind::InvalidData,
+            ErrorKind::InvalidData,
             "Invalid cursor response",
         ))
     }
@@ -151,7 +152,7 @@ impl Drop for Terminal {
     fn drop(&mut self) {
         self.disable_raw_mode().unwrap_or_else(|e| {
             println!("Error disabling raw mode: {}", e);
-            std::process::exit(1);
+            exit(1);
         });
     }
 }

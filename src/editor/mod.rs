@@ -1,4 +1,4 @@
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 use std::mem::take;
 use std::process::exit;
 use std::u16;
@@ -97,9 +97,7 @@ impl Editor {
             b'd' => Ok(self.cursor_col = self.cursor_col.saturating_add(1)),
             b's' => Ok(self.cursor_row = self.cursor_row.saturating_add(1)),
             b'w' => Ok(self.cursor_row = self.cursor_row.saturating_sub(1)),
-            _ => {
-                Err(Error::new(std::io::ErrorKind::InvalidInput, "Invalid key"))
-            }
+            _ => Err(Error::new(ErrorKind::InvalidInput, "Invalid key")),
         }
     }
 
