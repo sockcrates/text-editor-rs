@@ -117,10 +117,10 @@ impl Terminal {
         let stdin = stdin();
         let stdout = stdout();
         Ok(Self {
-            stdin,
             original_termios,
-            stdout,
             raw_termios,
+            stdin,
+            stdout,
         })
     }
 
