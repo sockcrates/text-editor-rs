@@ -10,8 +10,4 @@ impl AppendBuffer {
     pub fn append(&mut self, s: &str) {
         self.chars.extend(s.bytes());
     }
-
-    pub fn free(&mut self) {
-        self.chars.clear();
-    }
 }

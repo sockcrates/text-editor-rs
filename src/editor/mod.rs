@@ -1,4 +1,5 @@
-use std::io::{stdin, stdout, Error, Read, Write};
+use std::io::Error;
+use std::mem::take;
 use std::process::exit;
 use std::u16;
 
@@ -62,7 +63,7 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let key: u8 = Self::read_key()?;
+        let key: u8 = self.read_key()?;
         match key {
             b'\x11' => Ok(self.exit()),
             b'a' | b'd' | b's' | b'w' => self.move_cursor(key),
@@ -70,11 +71,8 @@ impl Editor {
         }
     }
 
-    fn read_key() -> Result<u8, Error> {
-        let mut stdin = stdin();
-        let mut input: [u8; 1] = [0; 1];
-        stdin.read(&mut input)?;
-        Ok(input[0])
+    fn read_key(&mut self) -> Result<u8, Error> {
+        self.terminal.read_input()
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
@@ -86,10 +84,8 @@ impl Editor {
             &mut self.append_buffer.chars,
         )?;
         self.append_buffer.append(SHOW_CURSOR);
-        let mut stdout = stdout();
-        stdout.write(&self.append_buffer.chars)?;
-        stdout.flush()?;
-        self.append_buffer.free();
+        let buffer = take(&mut self.append_buffer.chars);
+        self.terminal.write_output_from_buffer(buffer)?;
         Ok(())
     }
 
@@ -106,7 +102,7 @@ impl Editor {
     pub fn new() -> Result<Self, Error> {
         let mut terminal = Terminal::new()?;
         terminal.enable_raw_mode()?;
-        let (rows, cols) = Terminal::get_window_size()?;
+        let (rows, cols) = terminal.get_window_size()?;
         let editor = Self {
             append_buffer: AppendBuffer::new(),
             cursor_col: 0,

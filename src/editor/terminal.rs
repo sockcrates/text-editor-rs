@@ -1,5 +1,5 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{Error, Read, Write};
+use std::io::{stdin, stdout, Error, Read, Stdin, Stdout, Write};
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
     IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
@@ -22,6 +22,8 @@ pub const SHOW_CURSOR: &str = "\x1b[?25h";
 pub struct Terminal {
     original_termios: Termios,
     raw_termios: Termios,
+    stdin: Stdin,
+    stdout: Stdout,
 }
 
 impl Terminal {
@@ -89,7 +91,7 @@ impl Terminal {
         ))
     }
 
-    pub fn get_window_size() -> Result<(u16, u16), Error> {
+    pub fn get_window_size(&mut self) -> Result<(u16, u16), Error> {
         let mut ws: winsize = winsize {
             ws_row: 0,
             ws_col: 0,
@@ -98,9 +100,8 @@ impl Terminal {
         };
         unsafe {
             if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
-                let mut stdout = std::io::stdout();
-                stdout.write(b"\x1b[999C\x1b[999B")?;
-                stdout.flush()?;
+                self.stdout.write(b"\x1b[999C\x1b[999B")?;
+                self.stdout.flush()?;
                 Terminal::get_cursor_position()
             } else {
                 Ok((ws.ws_row, ws.ws_col))
@@ -111,10 +112,20 @@ impl Terminal {
     pub fn new() -> Result<Self, Error> {
         let original_termios = Termios::from_fd(STDIN_FILENO)?;
         let raw_termios = original_termios.clone();
+        let stdin = stdin();
+        let stdout = stdout();
         Ok(Self {
+            stdin,
             original_termios,
+            stdout,
             raw_termios,
         })
+    }
+
+    pub fn read_input(&mut self) -> Result<u8, Error> {
+        let mut input: [u8; 1] = [0; 1];
+        self.stdin.read(&mut input)?;
+        Ok(input[0])
     }
 
     pub fn set_cursor_position_buffer(
@@ -124,6 +135,11 @@ impl Terminal {
     ) -> Result<(), Error> {
         buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
         Ok(())
+    }
+
+    pub fn write_output_from_buffer(&mut self, buffer: Vec<u8>) -> Result<(), Error> {
+        self.stdout.write(&buffer)?;
+        self.stdout.flush()
     }
 }
 
