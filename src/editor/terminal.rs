@@ -1,5 +1,6 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{stdin, stdout, Error, Read, Stdin, Stdout, Write};
+use std::io::{stdin, stdout, Error, ErrorKind, Read, Stdin, Stdout, Write};
+use std::str::from_utf8;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN,
     INPCK, ISIG, ISTRIP, IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
@@ -44,26 +45,25 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn get_cursor_position() -> Result<(u16, u16), Error> {
+    pub fn get_cursor_position(&mut self) -> Result<(u16, u16), Error> {
         let mut buf: [u8; 32] = [0; 32];
         let mut i = 0;
-        let mut stdout = std::io::stdout();
-        stdout.write(b"\x1b[6n")?;
-        stdout.flush()?;
+        self.stdout.write(b"\x1b[6n")?;
+        self.stdout.flush()?;
         while i < buf.len() - 1 {
             let mut byte: [u8; 1] = [0; 1];
-            let nbytes = std::io::stdin().read(&mut byte)?;
+            let nbytes = self.stdin.read(&mut byte)?;
             if nbytes == 0 || byte[0] == b'R' {
                 break;
             }
             buf[i] = byte[0];
             i += 1;
         }
-        let response = std::str::from_utf8(&buf[..i])
-            .map_err(|e| Error::new(std::io::ErrorKind::InvalidData, e))?;
+        let response = from_utf8(&buf[..i])
+            .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
         if !(response.starts_with("\x1b[") || response.ends_with('R')) {
             return Err(Error::new(
-                std::io::ErrorKind::InvalidData,
+                ErrorKind::InvalidData,
                 "Invalid cursor response",
             ));
         }
@@ -73,13 +73,13 @@ impl Terminal {
         if let (Some(row_str), Some(col_str)) = (row_str, col_str) {
             let row = row_str.parse::<u16>().map_err(|e| {
                 Error::new(
-                    std::io::ErrorKind::InvalidData,
+                    ErrorKind::InvalidData,
                     format!("Invalid row number: {}", e),
                 )
             })?;
             let col = col_str.parse::<u16>().map_err(|e| {
                 Error::new(
-                    std::io::ErrorKind::InvalidData,
+                    ErrorKind::InvalidData,
                     format!("Invalid column number: {}", e),
                 )
             })?;
@@ -103,7 +103,7 @@ impl Terminal {
             {
                 self.stdout.write(b"\x1b[999C\x1b[999B")?;
                 self.stdout.flush()?;
-                Terminal::get_cursor_position()
+                self.get_cursor_position()
             } else {
                 Ok((ws.ws_row, ws.ws_col))
             }
