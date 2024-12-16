@@ -1,8 +1,8 @@
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::{stdin, stdout, Error, Read, Stdin, Stdout, Write};
 use termios::{
-    tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN, INPCK, ISIG, ISTRIP,
-    IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
+    tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN,
+    INPCK, ISIG, ISTRIP, IXON, OPOST, TCSAFLUSH, VMIN, VTIME,
 };
 
 /// VT100 escape sequence command "J" Erase in Display with the argument 2 (
@@ -99,7 +99,8 @@ impl Terminal {
             ws_ypixel: 0,
         };
         unsafe {
-            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0 {
+            if ioctl(STDOUT_FILENO, TIOCGWINSZ, &mut ws) == -1 || ws.ws_col == 0
+            {
                 self.stdout.write(b"\x1b[999C\x1b[999B")?;
                 self.stdout.flush()?;
                 Terminal::get_cursor_position()
@@ -137,7 +138,10 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn write_output_from_buffer(&mut self, buffer: Vec<u8>) -> Result<(), Error> {
+    pub fn write_output_from_buffer(
+        &mut self,
+        buffer: Vec<u8>,
+    ) -> Result<(), Error> {
         self.stdout.write(&buffer)?;
         self.stdout.flush()
     }

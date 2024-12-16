@@ -24,13 +24,15 @@ impl Editor {
     fn draw_rows(&mut self) -> Result<(), Error> {
         for i in 0..self.screen_rows {
             if i == self.screen_rows / 3 {
-                let message = format!("Kilo editor -- version {}", KILO_VERSION);
+                let message =
+                    format!("Kilo editor -- version {}", KILO_VERSION);
                 let message_length = message.len();
                 if message_length == self.screen_cols as usize {
                     self.append_buffer
                         .append(&message[..self.screen_cols as usize]);
                 } else {
-                    let padding = (self.screen_cols as usize - message_length) / 2;
+                    let padding =
+                        (self.screen_cols as usize - message_length) / 2;
                     let padded_message = format!(
                         "{:<padding$}{message:padding$}",
                         "",
@@ -95,7 +97,9 @@ impl Editor {
             b'd' => Ok(self.cursor_col = self.cursor_col.saturating_add(1)),
             b's' => Ok(self.cursor_row = self.cursor_row.saturating_add(1)),
             b'w' => Ok(self.cursor_row = self.cursor_row.saturating_sub(1)),
-            _ => Err(Error::new(std::io::ErrorKind::InvalidInput, "Invalid key")),
+            _ => {
+                Err(Error::new(std::io::ErrorKind::InvalidInput, "Invalid key"))
+            }
         }
     }
 
