@@ -6,11 +6,12 @@ mod append_buffer;
 use append_buffer::AppendBuffer;
 
 mod terminal;
-use terminal::{Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
+use terminal::{Terminal, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
 
 const KILO_VERSION: &str = "0.0.1";
 
 pub struct Editor {
+    append_buffer: AppendBuffer,
     cursor_col: u16,
     cursor_row: u16,
     screen_cols: u16,
@@ -19,13 +20,14 @@ pub struct Editor {
 }
 
 impl Editor {
-    fn draw_rows(&self, append_buffer: &mut AppendBuffer) -> Result<(), Error> {
+    fn draw_rows(&mut self) -> Result<(), Error> {
         for i in 0..self.screen_rows {
             if i == self.screen_rows / 3 {
                 let message = format!("Kilo editor -- version {}", KILO_VERSION);
                 let message_length = message.len();
                 if message_length == self.screen_cols as usize {
-                    append_buffer.append(&message[..self.screen_cols as usize]);
+                    self.append_buffer
+                        .append(&message[..self.screen_cols as usize]);
                 } else {
                     let padding = (self.screen_cols as usize - message_length) / 2;
                     let padded_message = format!(
@@ -34,14 +36,14 @@ impl Editor {
                         message = message,
                         padding = padding
                     );
-                    append_buffer.append(&padded_message);
+                    self.append_buffer.append(&padded_message);
                 }
             } else {
-                append_buffer.append("~");
+                self.append_buffer.append("~");
             }
-            append_buffer.append(ERASE_LINE);
+            self.append_buffer.append(ERASE_LINE);
             if i < self.screen_rows - 1 {
-                append_buffer.append("\r\n");
+                self.append_buffer.append("\r\n");
             }
         }
         Ok(())
@@ -75,19 +77,18 @@ impl Editor {
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
-        let mut append_buffer = AppendBuffer::new();
-        append_buffer.append(HIDE_CURSOR);
-        self.draw_rows(&mut append_buffer)?;
+        self.append_buffer.append(HIDE_CURSOR);
+        self.draw_rows()?;
         Terminal::set_cursor_position_buffer(
             self.cursor_row + 1,
             self.cursor_col + 1,
-            &mut append_buffer.buffer,
+            &mut self.append_buffer.buffer,
         )?;
-        append_buffer.append(SHOW_CURSOR);
+        self.append_buffer.append(SHOW_CURSOR);
         let mut stdout = stdout();
-        stdout.write(&append_buffer.buffer)?;
+        stdout.write(&self.append_buffer.buffer)?;
         stdout.flush()?;
-        append_buffer.free();
+        self.append_buffer.free();
         Ok(())
     }
 
@@ -96,6 +97,7 @@ impl Editor {
         terminal.enable_raw_mode()?;
         let (rows, cols) = Terminal::get_window_size()?;
         let editor = Self {
+            append_buffer: AppendBuffer::new(),
             cursor_col: 0,
             cursor_row: 0,
             screen_cols: cols,
