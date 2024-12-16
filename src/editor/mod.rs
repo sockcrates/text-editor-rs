@@ -51,11 +51,11 @@ impl Editor {
 
     fn exit(&mut self) {
         self.refresh_screen().unwrap_or_else(|e| {
-            println!("Error refreshing screen: {}", e);
+            eprintln!("Error refreshing screen: {}", e);
             exit(1);
         });
         self.terminal.disable_raw_mode().unwrap_or_else(|e| {
-            println!("Error disabling raw mode: {}", e);
+            eprintln!("Error disabling raw mode: {}", e);
             exit(1);
         });
         exit(0);
