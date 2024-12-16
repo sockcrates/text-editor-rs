@@ -1,18 +1,17 @@
 pub struct AppendBuffer {
-    pub buffer: Vec<u8>,
+    pub chars: Vec<u8>,
 }
 
 impl AppendBuffer {
     pub fn new() -> Self {
-        Self { buffer: Vec::new() }
+        Self { chars: Vec::new() }
     }
 
     pub fn append(&mut self, s: &str) {
-        self.buffer.extend(s.bytes());
+        self.chars.extend(s.bytes());
     }
 
     pub fn free(&mut self) {
-        self.buffer.clear();
+        self.chars.clear();
     }
 }
-

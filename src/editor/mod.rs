@@ -83,11 +83,11 @@ impl Editor {
         Terminal::set_cursor_position_buffer(
             self.cursor_row + 1,
             self.cursor_col + 1,
-            &mut self.append_buffer.buffer,
+            &mut self.append_buffer.chars,
         )?;
         self.append_buffer.append(SHOW_CURSOR);
         let mut stdout = stdout();
-        stdout.write(&self.append_buffer.buffer)?;
+        stdout.write(&self.append_buffer.chars)?;
         stdout.flush()?;
         self.append_buffer.free();
         Ok(())
