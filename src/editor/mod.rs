@@ -7,7 +7,9 @@ mod append_buffer;
 use append_buffer::AppendBuffer;
 
 mod terminal;
-use terminal::{Terminal, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR};
+use terminal::{
+    Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR,
+};
 
 const KILO_VERSION: &str = "0.0.1";
 
@@ -79,6 +81,7 @@ impl Editor {
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
         self.append_buffer.append(HIDE_CURSOR);
+        self.append_buffer.append(CURSOR_POSITION_START);
         self.draw_rows()?;
         Terminal::set_cursor_position_buffer(
             self.cursor_row + 1,
