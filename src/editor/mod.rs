@@ -18,6 +18,8 @@ enum EditorKey {
     ArrowRight,
     ArrowUp,
     ArrowDown,
+    PageUp,
+    PageDown,
 }
 
 pub struct Editor {
@@ -90,6 +92,26 @@ impl Editor {
                     None => return Ok(()),
                 };
             if second_byte == b'[' {
+                if third_byte >= b'0' && third_byte <= b'9' {
+                    let fourth_byte =
+                        match self.terminal.read_single_byte_from_input()? {
+                            Some((byte, _)) => byte,
+                            None => return Ok(()),
+                        };
+                    if fourth_byte == b'~' {
+                        match third_byte {
+                            b'5' => {
+                                return Ok(self.move_cursor(EditorKey::PageUp)?)
+                            }
+                            b'6' => {
+                                return Ok(
+                                    self.move_cursor(EditorKey::PageDown)?
+                                )
+                            }
+                            _ => return Ok(()),
+                        }
+                    }
+                }
                 match third_byte {
                     b'A' => self.move_cursor(EditorKey::ArrowUp)?,
                     b'B' => self.move_cursor(EditorKey::ArrowDown)?,
@@ -143,6 +165,18 @@ impl Editor {
             }
             EditorKey::ArrowUp => {
                 Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
+            }
+            EditorKey::PageUp => {
+                while self.cursor_row > 0 {
+                    self.cursor_row = self.cursor_row.saturating_sub(1);
+                }
+                return Ok(());
+            }
+            EditorKey::PageDown => {
+                while self.cursor_row < self.screen_rows - 1 {
+                    self.cursor_row = self.cursor_row.saturating_add(1);
+                }
+                Ok(())
             }
         }
     }
