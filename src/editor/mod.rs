@@ -85,28 +85,22 @@ impl Editor {
         match key {
             xon if xon == b'\x11' as i32 => Ok(self.exit()),
             arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
-                self.move_cursor(EditorKey::ArrowLeft)?;
-                Ok(())
+                return self.move_cursor(EditorKey::ArrowLeft);
             }
             arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
-                self.move_cursor(EditorKey::ArrowRight)?;
-                Ok(())
+                return self.move_cursor(EditorKey::ArrowRight);
             }
             arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
-                self.move_cursor(EditorKey::ArrowUp)?;
-                Ok(())
+                return self.move_cursor(EditorKey::ArrowUp);
             }
             arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
-                self.move_cursor(EditorKey::ArrowDown)?;
-                Ok(())
+                return self.move_cursor(EditorKey::ArrowDown);
             }
             page_up if page_up == EditorKey::PageUp as i32 => {
-                self.move_cursor(EditorKey::PageUp)?;
-                Ok(())
+                return self.move_cursor(EditorKey::PageUp);
             }
             page_down if page_down == EditorKey::PageDown as i32 => {
-                self.move_cursor(EditorKey::PageDown)?;
-                Ok(())
+                return self.move_cursor(EditorKey::PageDown);
             }
             _ => Ok(()),
         }
