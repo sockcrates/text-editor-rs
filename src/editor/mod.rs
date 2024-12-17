@@ -1,7 +1,6 @@
 use std::io::Error;
 use std::mem::take;
 use std::process::exit;
-use std::u16;
 
 mod append_buffer;
 use append_buffer::AppendBuffer;
@@ -28,10 +27,11 @@ enum EditorKey {
 
 pub struct Editor {
     append_buffer: AppendBuffer,
-    cursor_col: u16,
-    cursor_row: u16,
-    screen_cols: u16,
-    screen_rows: u16,
+    cursor_col: i32,
+    cursor_row: i32,
+    num_rows: i32,
+    screen_cols: i32,
+    screen_rows: i32,
     terminal: Terminal,
 }
 
@@ -218,11 +218,16 @@ impl Editor {
             append_buffer: AppendBuffer::new(),
             cursor_col: 0,
             cursor_row: 0,
+            num_rows: 0,
             screen_cols: cols,
             screen_rows: rows,
             terminal,
         };
         Ok(editor)
+    }
+
+    fn open(&mut self) -> Result<(), Error> {
+        Ok(())
     }
 
     pub fn run(&mut self) -> Result<(), Error> {

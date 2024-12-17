@@ -46,7 +46,7 @@ impl Terminal {
         Ok(())
     }
 
-    pub fn get_cursor_position(&mut self) -> Result<(u16, u16), Error> {
+    pub fn get_cursor_position(&mut self) -> Result<(i32, i32), Error> {
         let mut buf: [u8; 32] = [0; 32];
         let mut i = 0;
         self.stdout.write(b"\x1b[6n")?;
@@ -84,7 +84,7 @@ impl Terminal {
                     format!("Invalid column number: {}", e),
                 )
             })?;
-            return Ok((row, col));
+            return Ok((row as i32, col as i32));
         }
         Err(Error::new(
             ErrorKind::InvalidData,
@@ -92,7 +92,7 @@ impl Terminal {
         ))
     }
 
-    pub fn get_window_size(&mut self) -> Result<(u16, u16), Error> {
+    pub fn get_window_size(&mut self) -> Result<(i32, i32), Error> {
         let mut ws: winsize = winsize {
             ws_row: 0,
             ws_col: 0,
@@ -106,7 +106,7 @@ impl Terminal {
                 self.stdout.flush()?;
                 self.get_cursor_position()
             } else {
-                Ok((ws.ws_row, ws.ws_col))
+                Ok((ws.ws_row as i32, ws.ws_col as i32))
             }
         }
     }
@@ -131,8 +131,8 @@ impl Terminal {
     }
 
     pub fn set_cursor_position_buffer(
-        row: u16,
-        col: u16,
+        row: i32,
+        col: i32,
         buffer: &mut Vec<u8>,
     ) -> Result<(), Error> {
         buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
