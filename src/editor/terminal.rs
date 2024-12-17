@@ -124,10 +124,15 @@ impl Terminal {
         })
     }
 
-    pub fn read_input(&mut self) -> Result<u8, Error> {
+    pub fn read_single_byte_from_input(
+        &mut self,
+    ) -> Result<Option<(u8, usize)>, Error> {
         let mut input: [u8; 1] = [0; 1];
-        self.stdin.read(&mut input)?;
-        Ok(input[0])
+        let size = self.stdin.read(&mut input)?;
+        if size == 0 {
+            return Ok(None);
+        }
+        Ok(Some((input[0], size)))
     }
 
     pub fn set_cursor_position_buffer(

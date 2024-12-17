@@ -67,16 +67,44 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let key: u8 = self.read_key()?;
+        let key = self.read_keypress()?;
+        if key.is_none() {
+            return Ok(());
+        }
         match key {
-            b'\x11' => Ok(self.exit()),
-            b'a' | b'd' | b's' | b'w' => self.move_cursor(key),
+            Some(b'\x11') => Ok(self.exit()),
+            Some(b'a' | b'd' | b's' | b'w') => self.move_cursor(key.unwrap()),
             _ => Ok(()),
         }
     }
 
-    fn read_key(&mut self) -> Result<u8, Error> {
-        self.terminal.read_input()
+    fn read_keypress(&mut self) -> Result<Option<u8>, Error> {
+        let first_byte = match self.terminal.read_single_byte_from_input()? {
+            Some((byte, _)) => byte,
+            None => return Ok(None),
+        };
+        if first_byte == b'\x1b' {
+            let second_byte =
+                match self.terminal.read_single_byte_from_input()? {
+                    Some((byte, _)) => byte,
+                    None => return Ok(Some(first_byte)),
+                };
+            let third_byte =
+                match self.terminal.read_single_byte_from_input()? {
+                    Some((byte, _)) => byte,
+                    None => return Ok(Some(first_byte)),
+                };
+            if second_byte == b'[' {
+                match third_byte {
+                    b'A' => return Ok(Some(b'w')),
+                    b'B' => return Ok(Some(b's')),
+                    b'C' => return Ok(Some(b'd')),
+                    b'D' => return Ok(Some(b'a')),
+                    _ => return Ok(Some(first_byte)),
+                }
+            }
+        }
+        Ok(Some(first_byte))
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
