@@ -111,7 +111,7 @@ impl Terminal {
         }
     }
 
-    pub fn new() -> Result<Self, Error> {
+    pub fn try_new() -> Result<Self, Error> {
         let original_termios = Termios::from_fd(STDIN_FILENO)?;
         let raw_termios = original_termios.clone();
         let stdin = stdin();

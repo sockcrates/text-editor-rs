@@ -210,8 +210,8 @@ impl Editor {
         }
     }
 
-    pub fn new() -> Result<Self, Error> {
-        let mut terminal = Terminal::new()?;
+    pub fn try_new() -> Result<Self, Error> {
+        let mut terminal = Terminal::try_new()?;
         terminal.enable_raw_mode()?;
         let (rows, cols) = terminal.get_window_size()?;
         let editor = Self {

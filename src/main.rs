@@ -4,7 +4,7 @@ use std::process::exit;
 use editor::Editor;
 
 fn main() {
-    let mut editor = Editor::new().unwrap_or_else(|e| {
+    let mut editor = Editor::try_new().unwrap_or_else(|e| {
         eprintln!("Error in main: {}", e);
         exit(1);
     });
