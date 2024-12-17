@@ -80,94 +80,77 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        if let Some(key) = self.read_key()? {
-            match key {
-                xon if xon == b'\x11' as i32 => Ok(self.exit()),
-                arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
-                    return self.move_cursor(EditorKey::ArrowLeft);
-                }
-                arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
-                    return self.move_cursor(EditorKey::ArrowRight);
-                }
-                arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
-                    return self.move_cursor(EditorKey::ArrowUp);
-                }
-                arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
-                    return self.move_cursor(EditorKey::ArrowDown);
-                }
-                home if home == EditorKey::Home as i32 => {
-                    return self.move_cursor(EditorKey::Home);
-                }
-                end if end == EditorKey::End as i32 => {
-                    return self.move_cursor(EditorKey::End);
-                }
-                page_up if page_up == EditorKey::PageUp as i32 => {
-                    return self.move_cursor(EditorKey::PageUp);
-                }
-                page_down if page_down == EditorKey::PageDown as i32 => {
-                    return self.move_cursor(EditorKey::PageDown);
-                }
-                _ => Ok(()),
+        let key = self.read_key()?;
+        match key {
+            xon if xon == b'\x11' as i32 => Ok(self.exit()),
+            arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
+                return self.move_cursor(EditorKey::ArrowLeft);
             }
-        } else {
-            Ok(())
+            arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
+                return self.move_cursor(EditorKey::ArrowRight);
+            }
+            arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
+                return self.move_cursor(EditorKey::ArrowUp);
+            }
+            arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
+                return self.move_cursor(EditorKey::ArrowDown);
+            }
+            home if home == EditorKey::Home as i32 => {
+                return self.move_cursor(EditorKey::Home);
+            }
+            end if end == EditorKey::End as i32 => {
+                return self.move_cursor(EditorKey::End);
+            }
+            page_up if page_up == EditorKey::PageUp as i32 => {
+                return self.move_cursor(EditorKey::PageUp);
+            }
+            page_down if page_down == EditorKey::PageDown as i32 => {
+                return self.move_cursor(EditorKey::PageDown);
+            }
+            _ => Ok(()),
         }
     }
 
-    fn read_key(&mut self) -> Result<Option<i32>, Error> {
+    fn read_key(&mut self) -> Result<i32, Error> {
         let mut sequence = [0; 4];
-        match self.terminal.read_single_byte_from_input()? {
-            Some(byte) => sequence[0] = byte,
-            None => return Ok(None),
-        };
+        sequence[0] = self.terminal.read_single_byte_from_input()?;
         if sequence[0] == b'\x1b' {
-            match self.terminal.read_single_byte_from_input()? {
-                Some(byte) => sequence[1] = byte,
-                None => return Ok(Some(b'\x1b' as i32)),
-            };
-            match self.terminal.read_single_byte_from_input()? {
-                Some(byte) => sequence[2] = byte,
-                None => return Ok(Some(b'\x1b' as i32)),
-            };
-            match self.terminal.read_single_byte_from_input()? {
-                Some(byte) => sequence[3] = byte,
-                None => return Ok(Some(b'\x1b' as i32)),
-            };
+            sequence[1] = self.terminal.read_single_byte_from_input()?;
+            sequence[2] = self.terminal.read_single_byte_from_input()?;
+            sequence[3] = self.terminal.read_single_byte_from_input()?;
             if sequence[1] == b'[' {
                 if sequence[2] >= b'0' && sequence[2] <= b'9' {
                     if sequence[3] == b'~' {
                         match sequence[2] {
-                            b'1' => return Ok(Some(EditorKey::Home as i32)),
-                            b'3' => return Ok(Some(EditorKey::Delete as i32)),
-                            b'4' => return Ok(Some(EditorKey::End as i32)),
-                            b'5' => return Ok(Some(EditorKey::PageUp as i32)),
-                            b'6' => {
-                                return Ok(Some(EditorKey::PageDown as i32))
-                            }
-                            b'7' => return Ok(Some(EditorKey::Home as i32)),
-                            b'8' => return Ok(Some(EditorKey::End as i32)),
-                            _ => return Ok(Some(sequence[0] as i32)),
+                            b'1' => return Ok(EditorKey::Home as i32),
+                            b'3' => return Ok(EditorKey::Delete as i32),
+                            b'4' => return Ok(EditorKey::End as i32),
+                            b'5' => return Ok(EditorKey::PageUp as i32),
+                            b'6' => return Ok(EditorKey::PageDown as i32),
+                            b'7' => return Ok(EditorKey::Home as i32),
+                            b'8' => return Ok(EditorKey::End as i32),
+                            _ => return Ok(sequence[0] as i32),
                         }
                     }
                 }
                 match sequence[2] {
-                    b'A' => return Ok(Some(EditorKey::ArrowUp as i32)),
-                    b'B' => return Ok(Some(EditorKey::ArrowDown as i32)),
-                    b'C' => return Ok(Some(EditorKey::ArrowRight as i32)),
-                    b'D' => return Ok(Some(EditorKey::ArrowLeft as i32)),
-                    b'H' => return Ok(Some(EditorKey::Home as i32)),
-                    b'F' => return Ok(Some(EditorKey::End as i32)),
-                    _ => return Ok(Some(sequence[0] as i32)),
+                    b'A' => return Ok(EditorKey::ArrowUp as i32),
+                    b'B' => return Ok(EditorKey::ArrowDown as i32),
+                    b'C' => return Ok(EditorKey::ArrowRight as i32),
+                    b'D' => return Ok(EditorKey::ArrowLeft as i32),
+                    b'H' => return Ok(EditorKey::Home as i32),
+                    b'F' => return Ok(EditorKey::End as i32),
+                    _ => return Ok(sequence[0] as i32),
                 }
             } else if sequence[1] == b'O' {
                 match sequence[2] {
-                    b'H' => return Ok(Some(EditorKey::Home as i32)),
-                    b'F' => return Ok(Some(EditorKey::End as i32)),
-                    _ => return Ok(Some(sequence[0] as i32)),
+                    b'H' => return Ok(EditorKey::Home as i32),
+                    b'F' => return Ok(EditorKey::End as i32),
+                    _ => return Ok(sequence[0] as i32),
                 }
             }
         }
-        Ok(Some(sequence[0] as i32))
+        Ok(sequence[0] as i32)
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
