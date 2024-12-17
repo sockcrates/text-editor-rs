@@ -76,30 +76,29 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let first_byte = match self.terminal.read_single_byte_from_input()? {
-            Some((byte, _)) => byte,
-            None => return Ok(()),
+        let mut sequence = [0; 3];
+        match self.terminal.read_single_byte_from_input()? {
+            Some(byte) => sequence[0] = byte,
+            None => (),
         };
-        if first_byte == b'\x1b' {
-            let second_byte =
-                match self.terminal.read_single_byte_from_input()? {
-                    Some((byte, _)) => byte,
-                    None => return Ok(()),
-                };
-            let third_byte =
-                match self.terminal.read_single_byte_from_input()? {
-                    Some((byte, _)) => byte,
-                    None => return Ok(()),
-                };
-            if second_byte == b'[' {
-                if third_byte >= b'0' && third_byte <= b'9' {
+        if sequence[0] == b'\x1b' {
+            match self.terminal.read_single_byte_from_input()? {
+                Some(byte) => sequence[1] = byte,
+                None => (),
+            };
+            match self.terminal.read_single_byte_from_input()? {
+                Some(byte) => sequence[2] = byte,
+                None => (),
+            };
+            if sequence[1] == b'[' {
+                if sequence[2] >= b'0' && sequence[2] <= b'9' {
                     let fourth_byte =
                         match self.terminal.read_single_byte_from_input()? {
-                            Some((byte, _)) => byte,
+                            Some(byte) => byte,
                             None => return Ok(()),
                         };
                     if fourth_byte == b'~' {
-                        match third_byte {
+                        match sequence[2] {
                             b'5' => {
                                 return Ok(self.move_cursor(EditorKey::PageUp)?)
                             }
@@ -112,7 +111,7 @@ impl Editor {
                         }
                     }
                 }
-                match third_byte {
+                match sequence[2] {
                     b'A' => self.move_cursor(EditorKey::ArrowUp)?,
                     b'B' => self.move_cursor(EditorKey::ArrowDown)?,
                     b'C' => self.move_cursor(EditorKey::ArrowRight)?,
@@ -121,7 +120,7 @@ impl Editor {
                 }
             }
         }
-        if first_byte == b'\x11' {
+        if sequence[0] == b'\x11' {
             return Ok(self.exit());
         }
         Ok(())
