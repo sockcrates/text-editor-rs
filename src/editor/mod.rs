@@ -19,6 +19,7 @@ enum EditorKey {
     ArrowRight,
     ArrowUp,
     ArrowDown,
+    Delete,
     Home,
     End,
     PageUp,
@@ -138,6 +139,7 @@ impl Editor {
                     if fourth_byte == b'~' {
                         match sequence[2] {
                             b'1' => return Ok(Some(EditorKey::Home as i32)),
+                            b'3' => return Ok(Some(EditorKey::Delete as i32)),
                             b'4' => return Ok(Some(EditorKey::End as i32)),
                             b'5' => return Ok(Some(EditorKey::PageUp as i32)),
                             b'6' => {
@@ -222,6 +224,7 @@ impl Editor {
                 }
                 Ok(())
             }
+            _ => Ok(()),
         }
     }
 
