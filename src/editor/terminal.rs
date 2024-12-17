@@ -1,7 +1,10 @@
+use std::{
+    io::{stdin, stdout, Error, ErrorKind, Read, Stdin, Stdout, Write},
+    process::exit,
+    str::from_utf8,
+};
+
 use libc::{ioctl, winsize, STDIN_FILENO, STDOUT_FILENO, TIOCGWINSZ};
-use std::io::{stdin, stdout, Error, ErrorKind, Read, Stdin, Stdout, Write};
-use std::process::exit;
-use std::str::from_utf8;
 use termios::{
     tcgetattr, tcsetattr, Termios, BRKINT, CS8, ECHO, ICANON, ICRNL, IEXTEN,
     INPCK, ISIG, ISTRIP, IXON, OPOST, TCSAFLUSH, VMIN, VTIME,

@@ -1,8 +1,6 @@
-use std::io::Error;
-use std::mem::take;
-use std::process::exit;
-
 mod append_buffer;
+use std::{io::Error, mem::take, process::exit};
+
 use append_buffer::AppendBuffer;
 
 mod terminal;
