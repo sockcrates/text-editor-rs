@@ -35,7 +35,7 @@ pub struct Editor {
 }
 
 impl Editor {
-    fn draw_rows(&mut self) -> Result<(), Error> {
+    fn draw_rows(&mut self) -> () {
         for i in 0..self.screen_rows {
             if i >= self.num_rows {
                 if i == self.screen_rows / 3 {
@@ -72,7 +72,6 @@ impl Editor {
                 self.append_buffer.append("\r\n");
             }
         }
-        Ok(())
     }
 
     fn exit(&mut self) -> Result<(), Error> {
@@ -86,28 +85,28 @@ impl Editor {
         match key {
             xon if xon == b'\x11' as i32 => self.exit(),
             arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
-                return self.move_cursor(EditorKey::ArrowLeft);
+                Ok(self.move_cursor(EditorKey::ArrowLeft))
             }
             arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
-                return self.move_cursor(EditorKey::ArrowRight);
+                Ok(self.move_cursor(EditorKey::ArrowRight))
             }
             arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
-                return self.move_cursor(EditorKey::ArrowUp);
+                Ok(self.move_cursor(EditorKey::ArrowUp))
             }
             arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
-                return self.move_cursor(EditorKey::ArrowDown);
+                Ok(self.move_cursor(EditorKey::ArrowDown))
             }
             home if home == EditorKey::Home as i32 => {
-                return self.move_cursor(EditorKey::Home);
+                Ok(self.move_cursor(EditorKey::Home))
             }
             end if end == EditorKey::End as i32 => {
-                return self.move_cursor(EditorKey::End);
+                Ok(self.move_cursor(EditorKey::End))
             }
             page_up if page_up == EditorKey::PageUp as i32 => {
-                return self.move_cursor(EditorKey::PageUp);
+                Ok(self.move_cursor(EditorKey::PageUp))
             }
             page_down if page_down == EditorKey::PageDown as i32 => {
-                return self.move_cursor(EditorKey::PageDown);
+                Ok(self.move_cursor(EditorKey::PageDown))
             }
             _ => Ok(()),
         }
@@ -158,7 +157,7 @@ impl Editor {
     fn refresh_screen(&mut self) -> Result<(), Error> {
         self.append_buffer.append(HIDE_CURSOR);
         self.append_buffer.append(CURSOR_POSITION_START);
-        self.draw_rows()?;
+        self.draw_rows();
         Terminal::set_cursor_position_buffer(
             self.cursor_row + 1,
             self.cursor_col + 1,
@@ -166,49 +165,40 @@ impl Editor {
         );
         self.append_buffer.append(SHOW_CURSOR);
         let buffer = take(&mut self.append_buffer.chars);
-        self.terminal.write_output_from_buffer(buffer)?;
-        Ok(())
+        self.terminal.write_output_from_buffer(buffer)
     }
 
-    fn move_cursor(&mut self, key: EditorKey) -> Result<(), Error> {
+    fn move_cursor(&mut self, key: EditorKey) -> () {
         match key {
             EditorKey::ArrowLeft => {
-                Ok(self.cursor_col = self.cursor_col.saturating_sub(1))
+                self.cursor_col = self.cursor_col.saturating_sub(1)
             }
             EditorKey::ArrowRight => {
                 if self.cursor_col < self.screen_cols - 1 {
-                    return Ok(
-                        self.cursor_col = self.cursor_col.saturating_add(1)
-                    );
+                    self.cursor_col = self.cursor_col.saturating_add(1)
                 }
-                Ok(())
             }
             EditorKey::ArrowUp => {
-                Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
+                self.cursor_row = self.cursor_row.saturating_sub(1)
             }
             EditorKey::ArrowDown => {
                 if self.cursor_row < self.screen_rows - 1 {
-                    return Ok(
-                        self.cursor_row = self.cursor_row.saturating_add(1)
-                    );
+                    self.cursor_row = self.cursor_row.saturating_add(1)
                 }
-                Ok(())
             }
-            EditorKey::Home => Ok(self.cursor_col = 0),
-            EditorKey::End => Ok(self.cursor_col = self.screen_cols - 1),
+            EditorKey::Home => self.cursor_col = 0,
+            EditorKey::End => self.cursor_col = self.screen_cols - 1,
             EditorKey::PageUp => {
                 while self.cursor_row > 0 {
                     self.cursor_row = self.cursor_row.saturating_sub(1);
                 }
-                return Ok(());
             }
             EditorKey::PageDown => {
                 while self.cursor_row < self.screen_rows - 1 {
                     self.cursor_row = self.cursor_row.saturating_add(1);
                 }
-                Ok(())
             }
-            _ => Ok(()),
+            _ => {}
         }
     }
 
@@ -229,14 +219,13 @@ impl Editor {
         Ok(editor)
     }
 
-    fn open(&mut self) -> Result<(), Error> {
+    fn open(&mut self) -> () {
         self.line = String::from("Hello, world!");
         self.num_rows = 1;
-        Ok(())
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
-        self.open()?;
+        self.open();
         loop {
             self.refresh_screen()?;
             self.process_keypress()?;

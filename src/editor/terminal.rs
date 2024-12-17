@@ -135,7 +135,7 @@ impl Terminal {
         row: i32,
         col: i32,
         buffer: &mut Vec<u8>,
-    ) {
+    ) -> () {
         buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
     }
 
@@ -149,7 +149,7 @@ impl Terminal {
 }
 
 impl Drop for Terminal {
-    fn drop(&mut self) {
+    fn drop(&mut self) -> () {
         self.disable_raw_mode().unwrap_or_else(|e| {
             eprintln!("Error disabling raw mode: {}", e);
             exit(1);
