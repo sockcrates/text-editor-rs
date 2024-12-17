@@ -13,6 +13,20 @@ use terminal::{
 
 const KILO_VERSION: &str = "0.0.1";
 
+#[repr(u8)]
+enum EditorKey {
+    ArrowLeft = b'a',
+    ArrowRight = b'd',
+    ArrowUp = b'w',
+    ArrowDown = b's',
+}
+
+impl EditorKey {
+    fn to_byte(self) -> u8 {
+        self as u8
+    }
+}
+
 pub struct Editor {
     append_buffer: AppendBuffer,
     cursor_col: u16,
@@ -96,10 +110,10 @@ impl Editor {
                 };
             if second_byte == b'[' {
                 match third_byte {
-                    b'A' => return Ok(Some(b'w')),
-                    b'B' => return Ok(Some(b's')),
-                    b'C' => return Ok(Some(b'd')),
-                    b'D' => return Ok(Some(b'a')),
+                    b'A' => return Ok(Some(EditorKey::ArrowUp.to_byte())),
+                    b'B' => return Ok(Some(EditorKey::ArrowDown.to_byte())),
+                    b'C' => return Ok(Some(EditorKey::ArrowRight.to_byte())),
+                    b'D' => return Ok(Some(EditorKey::ArrowLeft.to_byte())),
                     _ => return Ok(Some(first_byte)),
                 }
             }
