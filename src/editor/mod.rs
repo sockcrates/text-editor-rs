@@ -11,7 +11,7 @@ use terminal::{
     Terminal, CURSOR_POSITION_START, ERASE_LINE, HIDE_CURSOR, SHOW_CURSOR,
 };
 
-const KILO_VERSION: &str = "0.0.1";
+const KILO_VERSION: &str = "0.0.4";
 
 #[repr(i32)]
 enum EditorKey {
