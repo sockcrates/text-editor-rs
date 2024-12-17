@@ -22,6 +22,16 @@ enum EditorKey {
 }
 
 impl EditorKey {
+    fn from_byte(byte: u8) -> Option<Self> {
+        match byte {
+            b'a' => Some(Self::ArrowLeft),
+            b'd' => Some(Self::ArrowRight),
+            b'w' => Some(Self::ArrowUp),
+            b's' => Some(Self::ArrowDown),
+            _ => None,
+        }
+    }
+
     fn to_byte(self) -> u8 {
         self as u8
     }
@@ -81,13 +91,16 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let key = self.read_keypress()?;
-        if key.is_none() {
+        let key_option = self.read_keypress()?;
+        if key_option.is_none() {
             return Ok(());
         }
+        let key = key_option.unwrap();
         match key {
-            Some(b'\x11') => Ok(self.exit()),
-            Some(b'a' | b'd' | b's' | b'w') => self.move_cursor(key.unwrap()),
+            b'\x11' => Ok(self.exit()),
+            b'a' | b'd' | b's' | b'w' => {
+                self.move_cursor(EditorKey::from_byte(key).unwrap())
+            }
             _ => Ok(()),
         }
     }
@@ -136,12 +149,20 @@ impl Editor {
         Ok(())
     }
 
-    fn move_cursor(&mut self, key: u8) -> Result<(), Error> {
+    fn move_cursor(&mut self, key: EditorKey) -> Result<(), Error> {
         match key {
-            b'a' => Ok(self.cursor_col = self.cursor_col.saturating_sub(1)),
-            b'd' => Ok(self.cursor_col = self.cursor_col.saturating_add(1)),
-            b's' => Ok(self.cursor_row = self.cursor_row.saturating_add(1)),
-            b'w' => Ok(self.cursor_row = self.cursor_row.saturating_sub(1)),
+            EditorKey::ArrowLeft => {
+                Ok(self.cursor_col = self.cursor_col.saturating_sub(1))
+            }
+            EditorKey::ArrowRight => {
+                Ok(self.cursor_col = self.cursor_col.saturating_add(1))
+            }
+            EditorKey::ArrowUp => {
+                Ok(self.cursor_row = self.cursor_row.saturating_add(1))
+            }
+            EditorKey::ArrowDown => {
+                Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
+            }
             _ => Err(Error::new(ErrorKind::InvalidInput, "Invalid key")),
         }
     }
