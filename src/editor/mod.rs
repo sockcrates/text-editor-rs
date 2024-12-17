@@ -163,7 +163,6 @@ impl Editor {
             EditorKey::ArrowDown => {
                 Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
             }
-            _ => Err(Error::new(ErrorKind::InvalidInput, "Invalid key")),
         }
     }
 
