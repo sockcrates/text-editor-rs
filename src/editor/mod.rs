@@ -13,6 +13,7 @@ use terminal::{
 
 const KILO_VERSION: &str = "0.0.1";
 
+#[repr(i32)]
 enum EditorKey {
     ArrowLeft = 1000,
     ArrowRight,
@@ -76,54 +77,83 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
+        let key_option = self.read_key()?;
+        if key_option.is_none() {
+            return Ok(());
+        }
+        let key = key_option.unwrap();
+        match key {
+            xon if xon == b'\x11' as i32 => Ok(self.exit()),
+            arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
+                self.move_cursor(EditorKey::ArrowLeft)?;
+                Ok(())
+            }
+            arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
+                self.move_cursor(EditorKey::ArrowRight)?;
+                Ok(())
+            }
+            arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
+                self.move_cursor(EditorKey::ArrowUp)?;
+                Ok(())
+            }
+            arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
+                self.move_cursor(EditorKey::ArrowDown)?;
+                Ok(())
+            }
+            page_up if page_up == EditorKey::PageUp as i32 => {
+                self.move_cursor(EditorKey::PageUp)?;
+                Ok(())
+            }
+            page_down if page_down == EditorKey::PageDown as i32 => {
+                self.move_cursor(EditorKey::PageDown)?;
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+
+    fn read_key(&mut self) -> Result<Option<i32>, Error> {
         let mut sequence = [0; 3];
         match self.terminal.read_single_byte_from_input()? {
             Some(byte) => sequence[0] = byte,
-            None => (),
+            None => return Ok(None),
         };
         if sequence[0] == b'\x1b' {
             match self.terminal.read_single_byte_from_input()? {
                 Some(byte) => sequence[1] = byte,
-                None => (),
+                None => return Ok(Some(b'\x1b' as i32)),
             };
             match self.terminal.read_single_byte_from_input()? {
                 Some(byte) => sequence[2] = byte,
-                None => (),
+                None => return Ok(Some(b'\x1b' as i32)),
             };
             if sequence[1] == b'[' {
                 if sequence[2] >= b'0' && sequence[2] <= b'9' {
                     let fourth_byte =
                         match self.terminal.read_single_byte_from_input()? {
                             Some(byte) => byte,
-                            None => return Ok(()),
+                            None => return Ok(Some(b'\x1b' as i32)),
                         };
                     if fourth_byte == b'~' {
                         match sequence[2] {
-                            b'5' => {
-                                return Ok(self.move_cursor(EditorKey::PageUp)?)
-                            }
+                            b'5' => return Ok(Some(EditorKey::PageUp as i32)),
                             b'6' => {
-                                return Ok(
-                                    self.move_cursor(EditorKey::PageDown)?
-                                )
+                                return Ok(Some(EditorKey::PageDown as i32))
                             }
-                            _ => return Ok(()),
+                            _ => return Ok(Some(sequence[0] as i32)),
                         }
                     }
                 }
                 match sequence[2] {
-                    b'A' => self.move_cursor(EditorKey::ArrowUp)?,
-                    b'B' => self.move_cursor(EditorKey::ArrowDown)?,
-                    b'C' => self.move_cursor(EditorKey::ArrowRight)?,
-                    b'D' => self.move_cursor(EditorKey::ArrowLeft)?,
-                    _ => return Ok(()),
+                    b'A' => return Ok(Some(EditorKey::ArrowUp as i32)),
+                    b'B' => return Ok(Some(EditorKey::ArrowDown as i32)),
+                    b'C' => return Ok(Some(EditorKey::ArrowRight as i32)),
+                    b'D' => return Ok(Some(EditorKey::ArrowLeft as i32)),
+                    _ => return Ok(Some(sequence[0] as i32)),
                 }
             }
         }
-        if sequence[0] == b'\x11' {
-            return Ok(self.exit());
-        }
-        Ok(())
+        Ok(Some(sequence[0] as i32))
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
