@@ -115,7 +115,7 @@ impl Editor {
     }
 
     fn read_key(&mut self) -> Result<Option<i32>, Error> {
-        let mut sequence = [0; 3];
+        let mut sequence = [0; 4];
         match self.terminal.read_single_byte_from_input()? {
             Some(byte) => sequence[0] = byte,
             None => return Ok(None),
@@ -129,14 +129,13 @@ impl Editor {
                 Some(byte) => sequence[2] = byte,
                 None => return Ok(Some(b'\x1b' as i32)),
             };
+            match self.terminal.read_single_byte_from_input()? {
+                Some(byte) => sequence[3] = byte,
+                None => return Ok(Some(b'\x1b' as i32)),
+            };
             if sequence[1] == b'[' {
                 if sequence[2] >= b'0' && sequence[2] <= b'9' {
-                    let fourth_byte =
-                        match self.terminal.read_single_byte_from_input()? {
-                            Some(byte) => byte,
-                            None => return Ok(Some(b'\x1b' as i32)),
-                        };
-                    if fourth_byte == b'~' {
+                    if sequence[3] == b'~' {
                         match sequence[2] {
                             b'1' => return Ok(Some(EditorKey::Home as i32)),
                             b'3' => return Ok(Some(EditorKey::Delete as i32)),
