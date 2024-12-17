@@ -126,10 +126,20 @@ impl Editor {
                 Ok(self.cursor_col = self.cursor_col.saturating_sub(1))
             }
             EditorKey::ArrowRight => {
-                Ok(self.cursor_col = self.cursor_col.saturating_add(1))
+                if self.cursor_col < self.screen_cols - 1 {
+                    return Ok(
+                        self.cursor_col = self.cursor_col.saturating_add(1)
+                    );
+                }
+                Ok(())
             }
             EditorKey::ArrowDown => {
-                Ok(self.cursor_row = self.cursor_row.saturating_add(1))
+                if self.cursor_row < self.screen_rows - 1 {
+                    return Ok(
+                        self.cursor_row = self.cursor_row.saturating_add(1)
+                    );
+                }
+                Ok(())
             }
             EditorKey::ArrowUp => {
                 Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
