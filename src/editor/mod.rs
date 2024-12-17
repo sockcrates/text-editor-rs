@@ -77,32 +77,31 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let key_option = self.read_key()?;
-        if key_option.is_none() {
-            return Ok(());
-        }
-        let key = key_option.unwrap();
-        match key {
-            xon if xon == b'\x11' as i32 => Ok(self.exit()),
-            arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
-                return self.move_cursor(EditorKey::ArrowLeft);
+        if let Some(key) = self.read_key()? {
+            match key {
+                xon if xon == b'\x11' as i32 => Ok(self.exit()),
+                arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
+                    return self.move_cursor(EditorKey::ArrowLeft);
+                }
+                arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
+                    return self.move_cursor(EditorKey::ArrowRight);
+                }
+                arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
+                    return self.move_cursor(EditorKey::ArrowUp);
+                }
+                arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
+                    return self.move_cursor(EditorKey::ArrowDown);
+                }
+                page_up if page_up == EditorKey::PageUp as i32 => {
+                    return self.move_cursor(EditorKey::PageUp);
+                }
+                page_down if page_down == EditorKey::PageDown as i32 => {
+                    return self.move_cursor(EditorKey::PageDown);
+                }
+                _ => Ok(()),
             }
-            arrow_right if arrow_right == EditorKey::ArrowRight as i32 => {
-                return self.move_cursor(EditorKey::ArrowRight);
-            }
-            arrow_up if arrow_up == EditorKey::ArrowUp as i32 => {
-                return self.move_cursor(EditorKey::ArrowUp);
-            }
-            arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
-                return self.move_cursor(EditorKey::ArrowDown);
-            }
-            page_up if page_up == EditorKey::PageUp as i32 => {
-                return self.move_cursor(EditorKey::PageUp);
-            }
-            page_down if page_down == EditorKey::PageDown as i32 => {
-                return self.move_cursor(EditorKey::PageDown);
-            }
-            _ => Ok(()),
+        } else {
+            Ok(())
         }
     }
 
