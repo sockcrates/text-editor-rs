@@ -29,6 +29,7 @@ pub struct Editor {
     append_buffer: AppendBuffer,
     cursor_col: i32,
     cursor_row: i32,
+    line: String,
     num_rows: i32,
     screen_cols: i32,
     screen_rows: i32,
@@ -38,26 +39,35 @@ pub struct Editor {
 impl Editor {
     fn draw_rows(&mut self) -> Result<(), Error> {
         for i in 0..self.screen_rows {
-            if i == self.screen_rows / 3 {
-                let message =
-                    format!("Kilo editor -- version {}", KILO_VERSION);
-                let message_length = message.len();
-                if message_length == self.screen_cols as usize {
-                    self.append_buffer
-                        .append(&message[..self.screen_cols as usize]);
+            if i >= self.num_rows {
+                if i == self.screen_rows / 3 {
+                    let message =
+                        format!("Kilo editor -- version {}", KILO_VERSION);
+                    let message_length = message.len();
+                    if message_length == self.screen_cols as usize {
+                        self.append_buffer
+                            .append(&message[..self.screen_cols as usize]);
+                    } else {
+                        let padding =
+                            (self.screen_cols as usize - message_length) / 2;
+                        let padded_message = format!(
+                            "{:<padding$}{message:padding$}",
+                            "",
+                            message = message,
+                            padding = padding
+                        );
+                        self.append_buffer.append(&padded_message);
+                    }
                 } else {
-                    let padding =
-                        (self.screen_cols as usize - message_length) / 2;
-                    let padded_message = format!(
-                        "{:<padding$}{message:padding$}",
-                        "",
-                        message = message,
-                        padding = padding
-                    );
-                    self.append_buffer.append(&padded_message);
+                    self.append_buffer.append("~");
                 }
             } else {
-                self.append_buffer.append("~");
+                let length = if self.line.len() > self.screen_cols as usize {
+                    self.screen_cols as usize
+                } else {
+                    self.line.len()
+                };
+                self.append_buffer.append(&self.line[..length]);
             }
             self.append_buffer.append(ERASE_LINE);
             if i < self.screen_rows - 1 {
@@ -218,6 +228,7 @@ impl Editor {
             append_buffer: AppendBuffer::new(),
             cursor_col: 0,
             cursor_row: 0,
+            line: String::new(),
             num_rows: 0,
             screen_cols: cols,
             screen_rows: rows,
@@ -227,10 +238,13 @@ impl Editor {
     }
 
     fn open(&mut self) -> Result<(), Error> {
+        self.line = String::from("Hello, world!");
+        self.num_rows = 1;
         Ok(())
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
+        self.open()?;
         loop {
             self.refresh_screen()?;
             self.process_keypress()?;
