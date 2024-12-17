@@ -1,15 +1,9 @@
 mod editor;
-use std::process::exit;
+use std::io::Error;
 
 use editor::Editor;
 
-fn main() {
-    let mut editor = Editor::try_new().unwrap_or_else(|e| {
-        eprintln!("Error in main: {}", e);
-        exit(1);
-    });
-    editor.run().unwrap_or_else(|e| {
-        eprintln!("Error running terminal {}", e);
-        exit(1);
-    });
+fn main() -> Result<(), Error> {
+    let mut editor = Editor::try_new()?;
+    editor.run()
 }

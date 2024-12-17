@@ -75,22 +75,16 @@ impl Editor {
         Ok(())
     }
 
-    fn exit(&mut self) {
-        self.refresh_screen().unwrap_or_else(|e| {
-            eprintln!("Error refreshing screen: {}", e);
-            exit(1);
-        });
-        self.terminal.disable_raw_mode().unwrap_or_else(|e| {
-            eprintln!("Error disabling raw mode: {}", e);
-            exit(1);
-        });
+    fn exit(&mut self) -> Result<(), Error> {
+        self.refresh_screen()?;
+        self.terminal.disable_raw_mode()?;
         exit(0);
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
         let key = self.read_key()?;
         match key {
-            xon if xon == b'\x11' as i32 => Ok(self.exit()),
+            xon if xon == b'\x11' as i32 => self.exit(),
             arrow_left if arrow_left == EditorKey::ArrowLeft as i32 => {
                 return self.move_cursor(EditorKey::ArrowLeft);
             }
@@ -169,7 +163,7 @@ impl Editor {
             self.cursor_row + 1,
             self.cursor_col + 1,
             &mut self.append_buffer.chars,
-        )?;
+        );
         self.append_buffer.append(SHOW_CURSOR);
         let buffer = take(&mut self.append_buffer.chars);
         self.terminal.write_output_from_buffer(buffer)?;

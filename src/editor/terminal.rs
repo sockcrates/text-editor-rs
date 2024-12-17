@@ -33,8 +33,7 @@ pub struct Terminal {
 
 impl Terminal {
     pub fn disable_raw_mode(&mut self) -> Result<(), Error> {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &mut self.original_termios)?;
-        Ok(())
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &mut self.original_termios)
     }
 
     pub fn enable_raw_mode(&mut self) -> Result<(), Error> {
@@ -45,8 +44,7 @@ impl Terminal {
         self.raw_termios.c_oflag &= !(OPOST);
         self.raw_termios.c_cc[VMIN] = 0;
         self.raw_termios.c_cc[VTIME] = 1;
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &self.raw_termios)?;
-        Ok(())
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &self.raw_termios)
     }
 
     pub fn get_cursor_position(&mut self) -> Result<(i32, i32), Error> {
@@ -137,9 +135,8 @@ impl Terminal {
         row: i32,
         col: i32,
         buffer: &mut Vec<u8>,
-    ) -> Result<(), Error> {
+    ) {
         buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
-        Ok(())
     }
 
     pub fn write_output_from_buffer(
@@ -154,7 +151,7 @@ impl Terminal {
 impl Drop for Terminal {
     fn drop(&mut self) {
         self.disable_raw_mode().unwrap_or_else(|e| {
-            println!("Error disabling raw mode: {}", e);
+            eprintln!("Error disabling raw mode: {}", e);
             exit(1);
         });
     }
