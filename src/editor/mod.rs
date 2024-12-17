@@ -19,6 +19,8 @@ enum EditorKey {
     ArrowRight,
     ArrowUp,
     ArrowDown,
+    Home,
+    End,
     PageUp,
     PageDown,
 }
@@ -92,6 +94,12 @@ impl Editor {
                 arrow_down if arrow_down == EditorKey::ArrowDown as i32 => {
                     return self.move_cursor(EditorKey::ArrowDown);
                 }
+                home if home == EditorKey::Home as i32 => {
+                    return self.move_cursor(EditorKey::Home);
+                }
+                end if end == EditorKey::End as i32 => {
+                    return self.move_cursor(EditorKey::End);
+                }
                 page_up if page_up == EditorKey::PageUp as i32 => {
                     return self.move_cursor(EditorKey::PageUp);
                 }
@@ -129,10 +137,14 @@ impl Editor {
                         };
                     if fourth_byte == b'~' {
                         match sequence[2] {
+                            b'1' => return Ok(Some(EditorKey::Home as i32)),
+                            b'4' => return Ok(Some(EditorKey::End as i32)),
                             b'5' => return Ok(Some(EditorKey::PageUp as i32)),
                             b'6' => {
                                 return Ok(Some(EditorKey::PageDown as i32))
                             }
+                            b'7' => return Ok(Some(EditorKey::Home as i32)),
+                            b'8' => return Ok(Some(EditorKey::End as i32)),
                             _ => return Ok(Some(sequence[0] as i32)),
                         }
                     }
@@ -142,6 +154,14 @@ impl Editor {
                     b'B' => return Ok(Some(EditorKey::ArrowDown as i32)),
                     b'C' => return Ok(Some(EditorKey::ArrowRight as i32)),
                     b'D' => return Ok(Some(EditorKey::ArrowLeft as i32)),
+                    b'H' => return Ok(Some(EditorKey::Home as i32)),
+                    b'F' => return Ok(Some(EditorKey::End as i32)),
+                    _ => return Ok(Some(sequence[0] as i32)),
+                }
+            } else if sequence[1] == b'O' {
+                match sequence[2] {
+                    b'H' => return Ok(Some(EditorKey::Home as i32)),
+                    b'F' => return Ok(Some(EditorKey::End as i32)),
                     _ => return Ok(Some(sequence[0] as i32)),
                 }
             }
@@ -177,6 +197,9 @@ impl Editor {
                 }
                 Ok(())
             }
+            EditorKey::ArrowUp => {
+                Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
+            }
             EditorKey::ArrowDown => {
                 if self.cursor_row < self.screen_rows - 1 {
                     return Ok(
@@ -185,9 +208,8 @@ impl Editor {
                 }
                 Ok(())
             }
-            EditorKey::ArrowUp => {
-                Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
-            }
+            EditorKey::Home => Ok(self.cursor_col = 0),
+            EditorKey::End => Ok(self.cursor_col = self.screen_cols - 1),
             EditorKey::PageUp => {
                 while self.cursor_row > 0 {
                     self.cursor_row = self.cursor_row.saturating_sub(1);
