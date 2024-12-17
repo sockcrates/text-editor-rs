@@ -1,4 +1,4 @@
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 use std::mem::take;
 use std::process::exit;
 use std::u16;
@@ -13,28 +13,11 @@ use terminal::{
 
 const KILO_VERSION: &str = "0.0.1";
 
-#[repr(u8)]
 enum EditorKey {
-    ArrowLeft = b'a',
-    ArrowRight = b'd',
-    ArrowUp = b'w',
-    ArrowDown = b's',
-}
-
-impl EditorKey {
-    fn from_byte(byte: u8) -> Option<Self> {
-        match byte {
-            b'a' => Some(Self::ArrowLeft),
-            b'd' => Some(Self::ArrowRight),
-            b'w' => Some(Self::ArrowUp),
-            b's' => Some(Self::ArrowDown),
-            _ => None,
-        }
-    }
-
-    fn to_byte(self) -> u8 {
-        self as u8
-    }
+    ArrowLeft = 1000,
+    ArrowRight,
+    ArrowUp,
+    ArrowDown,
 }
 
 pub struct Editor {
@@ -91,47 +74,35 @@ impl Editor {
     }
 
     fn process_keypress(&mut self) -> Result<(), Error> {
-        let key_option = self.read_keypress()?;
-        if key_option.is_none() {
-            return Ok(());
-        }
-        let key = key_option.unwrap();
-        match key {
-            b'\x11' => Ok(self.exit()),
-            b'a' | b'd' | b's' | b'w' => {
-                self.move_cursor(EditorKey::from_byte(key).unwrap())
-            }
-            _ => Ok(()),
-        }
-    }
-
-    fn read_keypress(&mut self) -> Result<Option<u8>, Error> {
         let first_byte = match self.terminal.read_single_byte_from_input()? {
             Some((byte, _)) => byte,
-            None => return Ok(None),
+            None => return Ok(()),
         };
         if first_byte == b'\x1b' {
             let second_byte =
                 match self.terminal.read_single_byte_from_input()? {
                     Some((byte, _)) => byte,
-                    None => return Ok(Some(first_byte)),
+                    None => return Ok(()),
                 };
             let third_byte =
                 match self.terminal.read_single_byte_from_input()? {
                     Some((byte, _)) => byte,
-                    None => return Ok(Some(first_byte)),
+                    None => return Ok(()),
                 };
             if second_byte == b'[' {
                 match third_byte {
-                    b'A' => return Ok(Some(EditorKey::ArrowUp.to_byte())),
-                    b'B' => return Ok(Some(EditorKey::ArrowDown.to_byte())),
-                    b'C' => return Ok(Some(EditorKey::ArrowRight.to_byte())),
-                    b'D' => return Ok(Some(EditorKey::ArrowLeft.to_byte())),
-                    _ => return Ok(Some(first_byte)),
+                    b'A' => self.move_cursor(EditorKey::ArrowUp)?,
+                    b'B' => self.move_cursor(EditorKey::ArrowDown)?,
+                    b'C' => self.move_cursor(EditorKey::ArrowRight)?,
+                    b'D' => self.move_cursor(EditorKey::ArrowLeft)?,
+                    _ => return Ok(()),
                 }
             }
         }
-        Ok(Some(first_byte))
+        if first_byte == b'\x11' {
+            return Ok(self.exit());
+        }
+        Ok(())
     }
 
     fn refresh_screen(&mut self) -> Result<(), Error> {
@@ -157,10 +128,10 @@ impl Editor {
             EditorKey::ArrowRight => {
                 Ok(self.cursor_col = self.cursor_col.saturating_add(1))
             }
-            EditorKey::ArrowUp => {
+            EditorKey::ArrowDown => {
                 Ok(self.cursor_row = self.cursor_row.saturating_add(1))
             }
-            EditorKey::ArrowDown => {
+            EditorKey::ArrowUp => {
                 Ok(self.cursor_row = self.cursor_row.saturating_sub(1))
             }
         }
