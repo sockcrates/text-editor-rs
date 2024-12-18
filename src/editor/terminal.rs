@@ -112,19 +112,6 @@ impl Terminal {
         }
     }
 
-    pub fn try_new() -> Result<Self, Error> {
-        let original_termios = Termios::from_fd(STDIN_FILENO)?;
-        let raw_termios = original_termios.clone();
-        let stdin = stdin();
-        let stdout = stdout();
-        Ok(Self {
-            original_termios,
-            raw_termios,
-            stdin,
-            stdout,
-        })
-    }
-
     pub fn read_single_byte_from_input(&mut self) -> Result<u8, Error> {
         let mut input: [u8; 1] = [0; 1];
         self.stdin.read(&mut input)?;
@@ -137,6 +124,19 @@ impl Terminal {
         buffer: &mut Vec<u8>,
     ) -> () {
         buffer.append(&mut format!("\x1b[{};{}H", row, col).into_bytes());
+    }
+
+    pub fn try_new() -> Result<Self, Error> {
+        let original_termios = Termios::from_fd(STDIN_FILENO)?;
+        let raw_termios = original_termios.clone();
+        let stdin = stdin();
+        let stdout = stdout();
+        Ok(Self {
+            original_termios,
+            raw_termios,
+            stdin,
+            stdout,
+        })
     }
 
     pub fn write_output_from_buffer(

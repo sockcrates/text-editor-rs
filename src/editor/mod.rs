@@ -85,6 +85,56 @@ impl Editor {
         exit(0);
     }
 
+    fn move_cursor(&mut self, key: EditorKey) -> () {
+        match key {
+            EditorKey::ArrowLeft => {
+                self.cursor_col = self.cursor_col.saturating_sub(1)
+            }
+            EditorKey::ArrowRight => {
+                if self.cursor_col < self.screen_cols - 1 {
+                    self.cursor_col = self.cursor_col.saturating_add(1)
+                }
+            }
+            EditorKey::ArrowUp => {
+                self.cursor_row = self.cursor_row.saturating_sub(1)
+            }
+            EditorKey::ArrowDown => {
+                if self.cursor_row < self.screen_rows - 1 {
+                    self.cursor_row = self.cursor_row.saturating_add(1)
+                }
+            }
+            EditorKey::Home => self.cursor_col = 0,
+            EditorKey::End => self.cursor_col = self.screen_cols - 1,
+            EditorKey::PageUp => {
+                while self.cursor_row > 0 {
+                    self.cursor_row = self.cursor_row.saturating_sub(1);
+                }
+            }
+            EditorKey::PageDown => {
+                while self.cursor_row < self.screen_rows - 1 {
+                    self.cursor_row = self.cursor_row.saturating_add(1);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn open(&mut self, file_name: &str) -> Result<(), Error> {
+        let file = File::open(file_name)?;
+        let mut reader = BufReader::new(file);
+        let mut line = String::new();
+        reader.read_line(&mut line)?;
+        self.line = if line.ends_with('\n') {
+            match line.pop() {
+                Some('\n') => line,
+                _ => line,
+            }
+        } else {
+            line.to_string()
+        };
+        Ok(self.num_rows = 1)
+    }
+
     fn process_keypress(&mut self) -> Result<(), Error> {
         let key = self.read_key()?;
         match key {
@@ -173,37 +223,13 @@ impl Editor {
         self.terminal.write_output_from_buffer(buffer)
     }
 
-    fn move_cursor(&mut self, key: EditorKey) -> () {
-        match key {
-            EditorKey::ArrowLeft => {
-                self.cursor_col = self.cursor_col.saturating_sub(1)
-            }
-            EditorKey::ArrowRight => {
-                if self.cursor_col < self.screen_cols - 1 {
-                    self.cursor_col = self.cursor_col.saturating_add(1)
-                }
-            }
-            EditorKey::ArrowUp => {
-                self.cursor_row = self.cursor_row.saturating_sub(1)
-            }
-            EditorKey::ArrowDown => {
-                if self.cursor_row < self.screen_rows - 1 {
-                    self.cursor_row = self.cursor_row.saturating_add(1)
-                }
-            }
-            EditorKey::Home => self.cursor_col = 0,
-            EditorKey::End => self.cursor_col = self.screen_cols - 1,
-            EditorKey::PageUp => {
-                while self.cursor_row > 0 {
-                    self.cursor_row = self.cursor_row.saturating_sub(1);
-                }
-            }
-            EditorKey::PageDown => {
-                while self.cursor_row < self.screen_rows - 1 {
-                    self.cursor_row = self.cursor_row.saturating_add(1);
-                }
-            }
-            _ => {}
+    pub fn run(&mut self, file_name: Option<&str>) -> Result<(), Error> {
+        if let Some(file_to_open) = file_name {
+            self.open(file_to_open)?;
+        }
+        loop {
+            self.refresh_screen()?;
+            self.process_keypress()?;
         }
     }
 
@@ -222,31 +248,5 @@ impl Editor {
             terminal,
         };
         Ok(editor)
-    }
-
-    fn open(&mut self, file_name: &str) -> Result<(), Error> {
-        let file = File::open(file_name)?;
-        let mut reader = BufReader::new(file);
-        let mut line = String::new();
-        reader.read_line(&mut line)?;
-        self.line = if line.ends_with('\n') {
-            match line.pop() {
-                Some('\n') => line,
-                _ => line,
-            }
-        } else {
-            line.to_string()
-        };
-        Ok(self.num_rows = 1)
-    }
-
-    pub fn run(&mut self, file_name: Option<&str>) -> Result<(), Error> {
-        if let Some(file_to_open) = file_name {
-            self.open(file_to_open)?;
-        }
-        loop {
-            self.refresh_screen()?;
-            self.process_keypress()?;
-        }
     }
 }
