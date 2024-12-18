@@ -43,7 +43,7 @@ impl Editor {
     fn draw_rows(&mut self) -> () {
         for i in 0..self.screen_rows {
             if i >= self.num_rows {
-                if i == self.screen_rows / 3 {
+                if self.num_rows == 0 && i == self.screen_rows / 3 {
                     let message =
                         format!("Kilo editor -- version {}", KILO_VERSION);
                     let message_length = message.len();
