@@ -1,10 +1,5 @@
 mod append_buffer;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, Error},
-    mem::take,
-    process::exit,
-};
+use std::{io::Error, mem::take, process::exit};
 
 use append_buffer::AppendBuffer;
 
@@ -224,17 +219,13 @@ impl Editor {
         Ok(editor)
     }
 
-    fn open(&mut self, file_name: &str) -> Result<(), Error> {
-        let file = File::open(file_name)?;
-        let mut reader = BufReader::new(file);
-        reader.read_line(&mut self.line)?;
-        Ok(self.num_rows = 1)
+    fn open(&mut self) -> () {
+        self.line = String::from("Hello, world!");
+        self.num_rows = 1;
     }
 
-    pub fn run(&mut self, file_name: Option<&str>) -> Result<(), Error> {
-        if let Some(file_to_open) = file_name {
-            self.open(file_to_open)?;
-        }
+    pub fn run(&mut self) -> Result<(), Error> {
+        self.open();
         loop {
             self.refresh_screen()?;
             self.process_keypress()?;
